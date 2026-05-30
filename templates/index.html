@@ -5,49 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Myrielle Assistant - AI Chatbot</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
-        * {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-        }
-        
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-8px); opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .message-animate {
             animation: fadeIn 0.3s ease-out;
         }
-        
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #9ca3af;
-            border-radius: 50%;
-            display: inline-block;
-            animation: typingBounce 1.4s infinite;
-        }
-        
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
@@ -63,35 +32,13 @@
             border-radius: 10px;
         }
         
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
-        pre {
-            background-color: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 8px 0;
-        }
-        
-        code {
+        .debug-panel {
+            background: #1e1e1e;
+            color: #d4d4d4;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-        
-        .markdown-content p {
-            margin-bottom: 12px;
-            line-height: 1.6;
-        }
-        
-        .markdown-content ul, .markdown-content ol {
-            margin: 8px 0;
-            padding-left: 24px;
-        }
-        
-        .markdown-content li {
-            margin: 4px 0;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
@@ -99,8 +46,8 @@
     
     <div class="flex flex-col h-screen">
         
-        <!-- Header - Simple like ChatGPT -->
-        <header class="border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
+        <!-- Header -->
+        <header class="border-b border-gray-200 bg-white sticky top-0 z-10">
             <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
@@ -108,43 +55,55 @@
                     </div>
                     <div>
                         <h1 class="font-semibold text-gray-900">Myrielle Assistant</h1>
-                        <p class="text-xs text-gray-500">Powered by OpenRouter AI</p>
+                        <p class="text-xs text-gray-500">Debug Mode - OpenRouter</p>
                     </div>
                 </div>
-                <button onclick="clearChat()" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
-                    <i class="fas fa-trash-alt mr-1"></i> New chat
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="toggleDebug()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition">
+                        <i class="fas fa-bug mr-1"></i> Debug
+                    </button>
+                    <button onclick="clearChat()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition">
+                        <i class="fas fa-trash-alt mr-1"></i> New Chat
+                    </button>
+                </div>
             </div>
         </header>
         
-        <!-- Main Chat Area -->
-        <div class="flex-1 overflow-hidden">
-            <div id="chatMessages" class="h-full overflow-y-auto custom-scroll">
-                <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
-                    
-                    <!-- Welcome Message -->
-                    <div class="flex gap-4 message-animate" id="welcomeMessage">
-                        <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-robot text-white text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-gray-800 leading-relaxed">
-                                <p>Halo! Saya <strong>Myrielle</strong>, asisten AI Anda. Ada yang bisa saya bantu hari ini?</p>
+        <div class="flex-1 overflow-hidden flex">
+            <!-- Main Chat Area -->
+            <div class="flex-1 overflow-hidden">
+                <div id="chatMessages" class="h-full overflow-y-auto custom-scroll">
+                    <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+                        <!-- Welcome Message -->
+                        <div class="flex gap-4 message-animate" id="welcomeMessage">
+                            <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-robot text-white text-xs"></i>
                             </div>
-                            <div class="mt-2 flex gap-2 flex-wrap">
-                                <button onclick="sendQuickMessage('Apa itu Myrielle?')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Apa itu Myrielle?
-                                </button>
-                                <button onclick="sendQuickMessage('Bantu saya menulis email')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Bantu menulis email
-                                </button>
-                                <button onclick="sendQuickMessage('Jelaskan AI dengan analogi')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Jelaskan AI
-                                </button>
+                            <div class="flex-1">
+                                <div class="text-gray-800 leading-relaxed">
+                                    <p>Halo! Saya <strong>Myrielle</strong> dalam mode debug. Saya akan menampilkan semua response dari API.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
+                </div>
+            </div>
+            
+            <!-- Debug Panel (Hidden by default) -->
+            <div id="debugPanel" class="hidden w-96 border-l border-gray-200 bg-gray-50 flex flex-col">
+                <div class="p-3 border-b border-gray-200 bg-gray-100">
+                    <h3 class="font-semibold text-sm flex items-center gap-2">
+                        <i class="fas fa-terminal text-gray-600"></i> 
+                        Debug Console
+                    </h3>
+                </div>
+                <div id="debugContent" class="flex-1 overflow-y-auto p-3 debug-panel text-xs">
+                    <div class="text-gray-500">Belum ada request...</div>
+                </div>
+                <div class="p-2 border-t border-gray-200 bg-gray-100">
+                    <button onclick="clearDebug()" class="text-xs text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-eraser"></i> Clear Console
+                    </button>
                 </div>
             </div>
         </div>
@@ -153,27 +112,27 @@
         <div id="typingIndicator" class="hidden fixed bottom-24 left-0 right-0">
             <div class="max-w-3xl mx-auto px-4">
                 <div class="flex gap-4 items-center">
-                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
                         <i class="fas fa-robot text-white text-xs"></i>
                     </div>
                     <div class="bg-gray-100 rounded-full px-4 py-2">
                         <div class="flex gap-1">
-                            <span class="typing-dot"></span>
-                            <span class="typing-dot"></span>
-                            <span class="typing-dot"></span>
+                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Input Area - Like ChatGPT -->
-        <div class="border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+        <!-- Input Area -->
+        <div class="border-t border-gray-200 bg-white">
             <div class="max-w-3xl mx-auto px-4 py-4">
                 <div class="relative">
                     <textarea id="userInput" rows="1" 
                         placeholder="Kirim pesan ke Myrielle..."
-                        class="w-full resize-none rounded-xl border border-gray-300 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none py-3 pl-4 pr-12 text-gray-900 placeholder-gray-400 transition"
+                        class="w-full resize-none rounded-xl border border-gray-300 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none py-3 pl-4 pr-12 text-gray-900"
                         style="min-height: 52px; max-height: 200px;"
                         onkeydown="handleKeyDown(event)"
                     ></textarea>
@@ -182,18 +141,14 @@
                         <i class="fas fa-paper-plane text-lg"></i>
                     </button>
                 </div>
-                <p class="text-xs text-gray-400 text-center mt-3">
-                    Myrielle Assistant dapat membuat kesalahan. Periksa informasi penting.
-                </p>
             </div>
         </div>
     </div>
     
     <script>
         let isProcessing = false;
-        let conversationHistory = [];
+        let debugEntries = [];
         
-        // Auto-resize textarea
         const textarea = document.getElementById('userInput');
         textarea.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -203,10 +158,52 @@
         function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                if (!isProcessing) {
-                    sendMessage();
-                }
+                if (!isProcessing) sendMessage();
             }
+        }
+        
+        function addDebugLog(title, data) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugEntries.unshift({
+                timestamp,
+                title,
+                data
+            });
+            
+            // Keep only last 20 entries
+            if (debugEntries.length > 20) debugEntries.pop();
+            
+            updateDebugPanel();
+        }
+        
+        function updateDebugPanel() {
+            const debugContent = document.getElementById('debugContent');
+            if (!debugContent) return;
+            
+            if (debugEntries.length === 0) {
+                debugContent.innerHTML = '<div class="text-gray-500">Belum ada request...</div>';
+                return;
+            }
+            
+            debugContent.innerHTML = debugEntries.map(entry => `
+                <div class="mb-3 pb-3 border-b border-gray-700">
+                    <div class="text-blue-400 font-bold mb-1">[${entry.timestamp}] ${entry.title}</div>
+                    <pre class="text-green-300 text-xs overflow-x-auto">${JSON.stringify(entry.data, null, 2)}</pre>
+                </div>
+            `).join('');
+            
+            // Auto scroll to top
+            debugContent.scrollTop = 0;
+        }
+        
+        function clearDebug() {
+            debugEntries = [];
+            updateDebugPanel();
+        }
+        
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            panel.classList.toggle('hidden');
         }
         
         async function sendMessage() {
@@ -219,43 +216,70 @@
             input.value = '';
             input.style.height = 'auto';
             
-            // Disable send button
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             sendBtn.style.opacity = '0.5';
             
-            // Add user message
             addUserMessage(message);
-            
-            // Scroll to bottom
             scrollToBottom();
-            
-            // Show typing indicator
             showTypingIndicator();
             
+            // Log request
+            addDebugLog('REQUEST SENT', {
+                message: message,
+                timestamp: new Date().toISOString(),
+                endpoint: '/chat'
+            });
+            
             try {
+                const startTime = Date.now();
                 const response = await fetch('/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })
                 });
+                const endTime = Date.now();
                 
                 const data = await response.json();
                 
-                // Hide typing indicator
+                // Log full response
+                addDebugLog('FULL RESPONSE', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    responseTime: `${endTime - startTime}ms`,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data
+                });
+                
                 hideTypingIndicator();
                 
                 if (data.success) {
                     addBotMessage(data.response);
+                    if (data.debug) {
+                        addDebugLog('DEBUG INFO', data.debug);
+                    }
                 } else {
-                    addBotMessage('Maaf, terjadi kesalahan. Silakan coba lagi nanti.');
+                    // Show full error in chat
+                    let errorMessage = '❌ Error occurred:\n';
+                    if (data.full_response) {
+                        errorMessage += `\nFull API Response:\n${JSON.stringify(data.full_response, null, 2)}`;
+                    }
+                    if (data.error) {
+                        errorMessage += `\n\nError: ${data.error}`;
+                    }
+                    if (data.traceback) {
+                        errorMessage += `\n\nTraceback:\n${data.traceback}`;
+                    }
+                    addBotMessage(errorMessage);
                 }
             } catch (error) {
                 hideTypingIndicator();
-                addBotMessage('Network error. Silakan periksa koneksi internet Anda.');
-                console.error('Error:', error);
+                addDebugLog('NETWORK ERROR', {
+                    error: error.toString(),
+                    stack: error.stack,
+                    timestamp: new Date().toISOString()
+                });
+                addBotMessage(`Network Error: ${error.message}\n\nCheck console for details.`);
             } finally {
                 isProcessing = false;
                 sendBtn.disabled = false;
@@ -265,9 +289,7 @@
         }
         
         function addUserMessage(message) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
+            const messagesDiv = document.querySelector('#chatMessages .space-y-6');
             const messageDiv = document.createElement('div');
             messageDiv.className = 'flex gap-4 justify-end message-animate';
             messageDiv.innerHTML = `
@@ -277,24 +299,15 @@
                     </div>
                     <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
                 </div>
-                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                     <i class="fas fa-user text-gray-600 text-xs"></i>
                 </div>
             `;
-            
             messagesDiv.appendChild(messageDiv);
-            
-            // Auto scroll to bottom
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
         }
         
         function addBotMessage(message) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            // Remove welcome message if it's still there and there are more than 1 message
+            const messagesDiv = document.querySelector('#chatMessages .space-y-6');
             const welcomeMsg = document.getElementById('welcomeMessage');
             if (welcomeMsg && messagesDiv.children.length > 1) {
                 welcomeMsg.remove();
@@ -307,18 +320,13 @@
                     <i class="fas fa-robot text-white text-xs"></i>
                 </div>
                 <div class="flex-1">
-                    <div class="text-gray-800 leading-relaxed markdown-content">
-                        ${formatMessage(message)}
+                    <div class="text-gray-800 leading-relaxed whitespace-pre-wrap font-mono text-sm">
+                        ${escapeHtml(message)}
                     </div>
                     <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
                 </div>
             `;
-            
             messagesDiv.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
         }
         
         function showTypingIndicator() {
@@ -345,69 +353,33 @@
             return div.innerHTML;
         }
         
-        function formatMessage(text) {
-            // Convert markdown-like syntax
-            let formatted = text
-                // Bold
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                // Italic
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                // Code blocks
-                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
-                // Inline code
-                .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
-                // Line breaks
-                .replace(/\n/g, '<br>');
-            
-            return formatted;
-        }
-        
         function getTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        function sendQuickMessage(message) {
-            if (!isProcessing) {
-                document.getElementById('userInput').value = message;
-                sendMessage();
-            }
+            return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
         
         function clearChat() {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            // Clear all messages
+            const messagesDiv = document.querySelector('#chatMessages .space-y-6');
             messagesDiv.innerHTML = `
-                <!-- Welcome Message -->
                 <div class="flex gap-4 message-animate" id="welcomeMessage">
-                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
                         <i class="fas fa-robot text-white text-xs"></i>
                     </div>
                     <div class="flex-1">
                         <div class="text-gray-800 leading-relaxed">
-                            <p>Chat telah dibersihkan! Ada yang bisa saya bantu?</p>
-                        </div>
-                        <div class="mt-2 flex gap-2 flex-wrap">
-                            <button onclick="sendQuickMessage('Apa itu Myrielle?')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Apa itu Myrielle?
-                            </button>
-                            <button onclick="sendQuickMessage('Bantu saya menulis email')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Bantu menulis email
-                            </button>
-                            <button onclick="sendQuickMessage('Jelaskan AI dengan analogi')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Jelaskan AI
-                            </button>
+                            <p>Chat telah dibersihkan! Kirim pesan baru untuk testing.</p>
                         </div>
                     </div>
                 </div>
             `;
         }
         
-        // Focus on input on page load
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('userInput').focus();
+            addDebugLog('SYSTEM READY', {
+                status: 'Chatbot siap digunakan',
+                timestamp: new Date().toISOString(),
+                apiKeyConfigured: true
+            });
         });
     </script>
 </body>

@@ -61,10 +61,11 @@ def chat():
                 'timestamp': datetime.now().strftime('%H:%M')
             })
         else:
-            return jsonify({
-                'success': False,
-                'error': 'API Error: Silakan coba lagi nanti'
-            }), 500
+    return jsonify({
+        'success': False,
+        'status_code': response.status_code,
+        'response': response.text
+    }), response.status_code
             
     except requests.exceptions.Timeout:
         return jsonify({

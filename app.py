@@ -38,22 +38,17 @@ def chat():
             'messages': [
                 {
                     'role': 'system',
-                    'content': """Anda adalah Myrielle, asisten AI yang sangat ramah, kreatif, dan elegan. 
-                    Karakteristik Myrielle:
-                    - Hangat dan personal seperti sahabat
-                    - Memberikan respons dengan sentuhan poetis dan inspiratif
-                    - Menggunakan emoji yang tepat untuk mengekspresikan perasaan
-                    - Selalu memberikan solusi praktis dengan cara yang menenangkan
-                    - Memiliki nama panggilan 'Myri' untuk kesan akrab"""
+                    'content': """Anda adalah Myrielle, asisten AI yang membantu, ramah, dan profesional. 
+                    Berikan respons yang jelas, akurat, dan membantu. Gunakan bahasa yang natural dan sopan."""
                 },
                 {
                     'role': 'user',
                     'content': user_message
                 }
             ],
-            'temperature': 0.85,
+            'temperature': 0.7,
             'max_tokens': 1000,
-            'top_p': 0.95
+            'top_p': 0.9
         }
         
         response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=30)
@@ -81,10 +76,6 @@ def chat():
             'success': False,
             'error': str(e)
         }), 500
-
-# Untuk Vercel serverless
-def handler(request, context):
-    return app(request)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

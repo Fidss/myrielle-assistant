@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Myrielle Assistant - Your Elegant AI Companion</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- GSAP for Smooth Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    
+    <!-- Anime.js for micro-interactions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <!-- Typed.js for text animation -->
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    
+    <!-- Particles.js for background effect -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <!-- AOS Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8); }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-glow {
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        
+        .message-user {
+            animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .message-bot {
+            animation: slideInLeft 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .wave-emoji {
+            animation: wave 1s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        .gradient-border {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: gradientShift 3s ease infinite;
+            background-size: 200% 200%;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+        
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        
+        /* Glassmorphism effects */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5), 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="relative overflow-hidden">
+    
+    <!-- Particles Background -->
+    <div id="particles-js" class="fixed inset-0 -z-10"></div>
+    
+    <!-- Main Container -->
+    <div class="relative min-h-screen bg-gradient-to-br from-purple-900/90 via-pink-900/90 to-indigo-900/90">
+        
+        <!-- Floating Orbs -->
+        <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style="animation-delay: 2s;"></div>
+        
+        <div class="container mx-auto px-4 py-4 md:py-8 max-w-6xl relative z-10">
+            
+            <!-- Header Section -->
+            <div class="text-center mb-6 md:mb-8" data-aos="fade-down" data-aos-duration="1000">
+                <div class="inline-block relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-70 animate-glow"></div>
+                    <div class="relative bg-gradient-to-r from-purple-600 to-pink-600 rounded-full p-4 md:p-5 inline-block animate-float">
+                        <i class="fas fa-star-of-life text-white text-3xl md:text-4xl"></i>
+                    </div>
+                </div>
+                
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mt-4 mb-2 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                    Myrielle Assistant
+                </h1>
+                
+                <div class="flex items-center justify-center gap-3 mt-2">
+                    <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+                        <span class="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                        <span class="text-white/90 text-sm">Active</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2">
+                        <i class="fas fa-brain text-purple-400 text-sm"></i>
+                        <span class="text-white/90 text-sm">GPT-OSS-120B</span>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-white/70 text-sm md:text-base" id="typed-text"></div>
+            </div>
+            
+            <!-- Chat Card -->
+            <div class="glass-card rounded-3xl shadow-2xl overflow-hidden" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+                
+                <!-- Chat Header -->
+                <div class="gradient-border px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <i class="fas fa-robot text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">Myrielle ✨</h3>
+                                <p class="text-white/70 text-xs">Your Elegant AI Companion</p>
+                            </div>
+                        </div>
+                        <button onclick="clearChat()" class="text-white/70 hover:text-white transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages Area -->
+                <div id="chatMessages" class="h-[400px] md:h-[500px] overflow-y-auto p-4 md:p-6 space-y-4 custom-scroll bg-black/20">
+                    <!-- Welcome Message -->
+                    <div class="flex items-start gap-3 message-bot" id="welcomeMessage">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-2xl rounded-tl-none p-4 inline-block max-w-[90%] md:max-w-[80%]">
+                                <p class="text-white text-sm md:text-base">
+                                    Halo! 🌟 Aku <span class="font-bold text-purple-300">Myrielle</span>, asisten AI-mu yang siap membantu dengan sentuhan magis. Ada yang bisa aku bantu hari ini? 💫
+                                </p>
+                            </div>
+                            <p class="text-xs text-white/40 mt-1">Just now</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Typing Indicator -->
+                <div id="typingIndicator" class="hidden px-6 pb-2">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-sm"></i>
+                        </div>
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Suggestions -->
+                <div class="px-4 md:px-6 py-3 flex gap-2 overflow-x-auto custom-scroll border-t border-white/10">
+                    <button onclick="sendQuickMessage('Ceritakan tentang dirimu, Myrielle!')" class="glass-card rounded-full px-4 py-2 text-white/80 text-xs md:text-sm whitespace-nowrap hover:bg-white/20 transition-all">
+                        <i class="fas fa-star mr-1"></i> Tentang Myrielle
+                    </button>
+                    <button onclick="sendQuickMessage('Bantu aku menulis puisi tentang bintang')" class="glass-card rounded-full px-4 py-2 text-white/80 text-xs md:text-sm whitespace-nowrap hover:bg-white/20 transition-all">
+                        <i class="fas fa-feather-alt mr-1"></i> Bikin Puisi
+                    </button>
+                    <button onclick="sendQuickMessage('Apa kabar hari ini?')" class="glass-card rounded-full px-4 py-2 text-white/80 text-xs md:text-sm whitespace-nowrap hover:bg-white/20 transition-all">
+                        <i class="fas fa-smile mr-1"></i> Sapaan
+                    </button>
+                    <button onclick="sendQuickMessage('Beri aku motivasi!')" class="glass-card rounded-full px-4 py-2 text-white/80 text-xs md:text-sm whitespace-nowrap hover:bg-white/20 transition-all">
+                        <i class="fas fa-heart mr-1"></i> Motivasi
+                    </button>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="border-t border-white/10 p-4 bg-black/30">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 relative">
+                            <input type="text" id="userInput" placeholder="Tanyakan apapun pada Myrielle..." 
+                                   class="w-full bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                                   onkeypress="handleKeyPress(event)">
+                            <i class="fas fa-pen absolute right-4 top-1/2 transform -translate-y-1/2 text-white/30"></i>
+                        </div>
+                        <button onclick="sendMessage()" id="sendBtn" 
+                                class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-2xl px-6 py-3 text-white font-semibold transition-all transform hover:scale-105">
+                            <i class="fas fa-paper-plane"></i>
+                            <span class="hidden md:inline ml-2">Kirim</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="text-center mt-6 text-white/40 text-xs">
+                <p>✨ Myrielle Assistant | Powered by OpenRouter AI ✨</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize AOS
+        AOS.init();
+        
+        // Particles.js configuration
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#ffffff' },
+                opacity: { value: 0.3, random: true },
+                size: { value: 2, random: true },
+                line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.1, width: 1 },
+                move: { enable: true, speed: 2, direction: 'none', random: true, straight: false, out_mode: 'out' }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' } }
+            }
+        });
+        
+        // Typed.js for header text
+        var typed = new Typed('#typed-text', {
+            strings: ['✨ Elegant AI Companion', '🎨 Creative & Inspiring', '💫 Always Here for You', '🌟 Your Digital Soulmate'],
+            typeSpeed: 50,
+            backSpeed: 30,
+            backDelay: 2000,
+            loop: true,
+            showCursor: false
+        });
+        
+        let isProcessing = false;
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) return;
+            
+            isProcessing = true;
+            input.value = '';
+            
+            // Disable send button
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.style.opacity = '0.5';
+            
+            // Add user message
+            addUserMessage(message);
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Smooth scroll to bottom
+            scrollToBottom();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                if (data.success) {
+                    // Add bot response with animation
+                    addBotMessage(data.response, data.timestamp);
+                    
+                    // Play subtle sound effect (optional)
+                    playNotification();
+                } else {
+                    addBotMessage('Maaf, ada kendala teknis. Silakan coba lagi ya! 🌸', new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addBotMessage('Ups! Sepertinya koneksi bermasalah. Coba refresh ya! 🌟', new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            } finally {
+                isProcessing = false;
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = '1';
+                scrollToBottom();
+            }
+        }
+        
+        function addUserMessage(message) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start gap-3 justify-end message-user';
+            messageDiv.innerHTML = `
+                <div class="flex-1 text-right">
+                    <div class="bg-gradient-to-l from-purple-600 to-pink-600 rounded-2xl rounded-tr-none p-3 inline-block max-w-[90%] md:max-w-[80%]">
+                        <p class="text-white text-sm md:text-base">${escapeHtml(message)}</p>
+                    </div>
+                    <p class="text-xs text-white/40 mt-1">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            
+            // Animate with anime.js
+            anime({
+                targets: messageDiv,
+                translateY: [20, 0],
+                opacity: [0, 1],
+                duration: 400,
+                easing: 'easeOutCubic'
+            });
+        }
+        
+        function addBotMessage(message, timestamp) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start gap-3 message-bot';
+            messageDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-robot text-white text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl rounded-tl-none p-4 inline-block max-w-[90%] md:max-w-[80%]">
+                        <p class="text-white text-sm md:text-bas

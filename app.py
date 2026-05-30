@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # OpenRouter configuration
-OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', 'YOUR_API_KEY')
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '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')
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 @app.route('/')

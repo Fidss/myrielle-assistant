@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Myrielle — AI Assistant</title>
     
-    <!-- Tailwind CSS + Google Fonts + Font Awesome -->
+    <!-- Tailwind + Fonts + Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- GSAP for smooth animations -->
+    <!-- GSAP + Marked + DOMPurify -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <!-- Marked + DOMPurify -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
@@ -20,15 +19,18 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        body {
-            background: linear-gradient(135deg, #f7f9fc 0%, #edf2f9 100%);
-            height: 100vh;
+        /* FIX: fullscreen fixed, no body scroll */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             position: fixed;
-            width: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2f8 100%);
         }
         
-        /* Hanya chat container yang bisa di-scroll, layout fixed total */
+        /* Hanya chat container yang scroll */
         .chat-scroll-area {
             height: 100%;
             overflow-y: auto;
@@ -40,7 +42,7 @@
         }
         
         .chat-scroll-area::-webkit-scrollbar-track {
-            background: #e9eef3;
+            background: #e2e8f0;
             border-radius: 10px;
         }
         
@@ -49,170 +51,117 @@
             border-radius: 10px;
         }
         
-        .chat-scroll-area::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
-        /* Glass header modern */
+        /* Glass header */
         .glass-header {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(203, 213, 225, 0.4);
         }
         
-        /* Chat bubbles */
+        /* Bubbles */
         .user-bubble {
             background: #1e293b;
             color: white;
             border-radius: 24px;
             border-bottom-right-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .bot-bubble {
             background: white;
             border-radius: 24px;
             border-bottom-left-radius: 6px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
-            border: 1px solid rgba(226, 232, 240, 0.7);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0,0,0,0.02);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         
         /* Animasi pesan masuk */
-        @keyframes slideUpFade {
-            from {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes slideFade {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
         .message-animate {
-            animation: slideUpFade 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+            animation: slideFade 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
         }
         
-        /* Premium typing indicator - elegant dots */
-        .typing-dots {
+        /* TEMPORARY MESSAGE (loading / typing preview) - akan diganti dengan respons asli */
+        .temp-message {
+            opacity: 0.85;
+            transition: all 0.2s;
+        }
+        
+        /* Typing dots di dalam bubble */
+        .inline-typing-dots {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
-        
-        .typing-dots span {
+        .inline-typing-dots span {
             width: 7px;
             height: 7px;
             background-color: #94a3b8;
             border-radius: 50%;
             display: inline-block;
-            opacity: 0.5;
-            animation: typingPulse 1.4s infinite ease-in-out;
+            animation: typingWave 1.3s infinite ease-in-out;
+        }
+        .inline-typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .inline-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .inline-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingWave {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; background-color: #94a3b8; }
+            30% { transform: translateY(-6px); opacity: 1; background-color: #475569; }
         }
         
-        .typing-dots span:nth-child(1) { animation-delay: 0s; }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typingPulse {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.4;
-                background-color: #94a3b8;
-            }
-            30% {
-                transform: translateY(-6px);
-                opacity: 1;
-                background-color: #475569;
-            }
-        }
-        
-        /* Typing card glass */
-        .typing-card-premium {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border-radius: 40px;
-            padding: 8px 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(203, 213, 225, 0.3);
-        }
-        
-        .input-glass {
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(203, 213, 225, 0.5);
-            transition: all 0.2s;
-        }
-        
-        .input-glass:focus-within {
-            border-color: #94a3b8;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 0 0 3px rgba(148, 163, 184, 0.1);
-        }
-        
+        /* Suggestion chips */
         .suggestion-chip {
             transition: all 0.2s ease;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-        }
-        
-        .suggestion-chip:hover {
             background: white;
+            backdrop-filter: blur(4px);
+            border: 1px solid #e2e8f0;
+        }
+        .suggestion-chip:hover {
+            background: #f8fafc;
             transform: translateY(-1px);
             border-color: #cbd5e1;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
         }
         
         /* Markdown styling */
-        .markdown-content p {
-            margin-bottom: 10px;
-            line-height: 1.55;
-        }
+        .markdown-content p { margin-bottom: 12px; line-height: 1.55; }
+        .markdown-content ul, .markdown-content ol { margin: 8px 0; padding-left: 1.5rem; }
+        .markdown-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 10px; font-size: 0.85em; }
+        .markdown-content pre { background: #0f172a; padding: 12px; border-radius: 16px; overflow-x: auto; color: #e2e8f0; }
         
-        .markdown-content ul, .markdown-content ol {
-            margin: 8px 0;
-            padding-left: 1.5rem;
+        /* Input area lebih lega dari bawah */
+        .input-wrapper {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(203, 213, 225, 0.5);
         }
-        
-        .markdown-content code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 0.85em;
-            font-family: 'SF Mono', monospace;
-        }
-        
-        .markdown-content pre {
-            background: #0f172a;
-            padding: 12px;
-            border-radius: 16px;
-            overflow-x: auto;
-            color: #e2e8f0;
-        }
-        
-        /* Hilangkan scroll body */
-        html, body {
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* Smooth hover pada send button */
-        .send-btn-active {
+        .input-glass {
+            background: white;
+            border: 1px solid #e2e8f0;
             transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .input-glass:focus-within {
+            border-color: #94a3b8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02), 0 0 0 3px rgba(148,163,184,0.08);
         }
         
-        .send-btn-active:active {
-            transform: scale(0.96);
+        /* menghilangkan scroll global */
+        .h-screen-fixed {
+            height: 100vh;
+            overflow: hidden;
         }
     </style>
 </head>
 <body class="antialiased">
-
-<div class="flex flex-col h-screen w-full overflow-hidden">
+<div class="flex flex-col h-screen-fixed w-full">
     
-    <!-- Header - elegan tanpa debug -->
-    <header class="glass-header sticky top-0 z-20 flex-shrink-0">
+    <!-- Header elegan -->
+    <header class="glass-header flex-shrink-0 z-20">
         <div class="max-w-3xl mx-auto px-5 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-gradient-to-br from-[#1e293b] to-[#0f172a] rounded-xl flex items-center justify-center shadow-md">
@@ -223,19 +172,18 @@
                     <p class="text-[11px] font-medium text-gray-500 -mt-0.5">asisten · imajinatif</p>
                 </div>
             </div>
-            <button onclick="clearChat()" class="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/60 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm border border-gray-100">
+            <button onclick="clearChat()" class="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/70 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm border border-gray-200">
                 <i class="far fa-message-slash text-sm"></i>
                 <span>Percakapan baru</span>
             </button>
         </div>
     </header>
     
-    <!-- CHAT AREA - hanya ini yang bisa di-scroll -->
-    <div class="flex-1 relative overflow-hidden min-h-0 flex flex-col">
-        <div id="chatScrollArea" class="chat-scroll-area flex-1">
+    <!-- CHAT AREA (hanya ini scroll) -->
+    <div class="flex-1 relative min-h-0 overflow-hidden">
+        <div id="chatScrollArea" class="chat-scroll-area h-full">
             <div class="max-w-3xl mx-auto px-5 py-6 space-y-5" id="messagesContainer">
-                
-                <!-- Welcome Message premium -->
+                <!-- Welcome Message -->
                 <div class="flex gap-3 message-animate" id="welcomeMessage">
                     <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
                         <i class="fas fa-sparkles text-white text-sm"></i>
@@ -246,9 +194,9 @@
                             <p class="text-gray-600 mt-1.5 leading-relaxed text-[15px]">Asisten AI imajinatif yang siap membantu menulis, menjelaskan, atau sekadar ngobrol santai. Ada yang bisa saya eksplorasi hari ini?</p>
                         </div>
                         <div class="mt-3 flex gap-2 flex-wrap">
-                            <button onclick="sendQuickMessage('Ceritakan tentang dirimu, Myrielle')" class="suggestion-chip text-xs border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-star text-[10px]"></i> Siapa Myrielle?</button>
-                            <button onclick="sendQuickMessage('Buatkan puisi tentang malam yang tenang')" class="suggestion-chip text-xs border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-feather-alt"></i> Puisi malam</button>
-                            <button onclick="sendQuickMessage('Tips fokus belajar')" class="suggestion-chip text-xs border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-brain"></i> Tips fokus</button>
+                            <button onclick="sendQuickMessage('Ceritakan tentang dirimu, Myrielle')" class="suggestion-chip text-xs text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-star text-[10px]"></i> Siapa Myrielle?</button>
+                            <button onclick="sendQuickMessage('Buatkan puisi tentang malam yang tenang')" class="suggestion-chip text-xs text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-feather-alt"></i> Puisi malam</button>
+                            <button onclick="sendQuickMessage('Tips fokus belajar produktif')" class="suggestion-chip text-xs text-gray-700 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fas fa-brain"></i> Tips fokus</button>
                         </div>
                     </div>
                 </div>
@@ -256,37 +204,18 @@
         </div>
     </div>
     
-    <!-- Typing Indicator Modern (tanpa tulisan jelek, hanya animasi dots elegan) -->
-    <div id="typingIndicator" class="fixed bottom-28 left-0 right-0 z-20 hidden transition-all duration-200 pointer-events-none">
-        <div class="max-w-3xl mx-auto px-5">
-            <div class="flex gap-3 items-center">
-                <div class="w-9 h-9 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                    <i class="fas fa-robot text-white text-sm"></i>
-                </div>
-                <div class="typing-card-premium flex items-center gap-2">
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 tracking-wide">Myrielle</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Input Area - fixed di bawah, tidak ikut scroll -->
-    <div class="flex-shrink-0 border-t border-gray-200/60 bg-white/80 backdrop-blur-xl z-10">
-        <div class="max-w-3xl mx-auto px-5 py-4">
+    <!-- Input Area - lebih lega, tidak mentok (padding bottom lebih besar) -->
+    <div class="input-wrapper flex-shrink-0">
+        <div class="max-w-3xl mx-auto px-5 py-4 pb-5">
             <div class="relative input-glass rounded-2xl shadow-sm">
                 <textarea id="userInput" rows="1" 
                     placeholder="Ketik pesan untuk Myrielle..."
                     class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-14 text-gray-800 placeholder:text-gray-400 text-[15px]"
-                    style="min-height: 52px; max-height: 160px;"
+                    style="min-height: 52px; max-height: 140px;"
                     onkeydown="handleKeyDown(event)"
                 ></textarea>
                 <button onclick="sendMessage()" id="sendBtn"
-                    class="absolute right-2 bottom-2 text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100 send-btn-active">
+                    class="absolute right-2 bottom-2 text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100 active:scale-95">
                     <i class="fas fa-paper-plane text-lg"></i>
                 </button>
             </div>
@@ -302,18 +231,18 @@
 <script>
     let isProcessing = false;
     let abortController = null;
+    let currentTempMessageDiv = null;   // referensi ke pesan sementara (loading bubble)
     
-    // DOM elements
+    // DOM Elements
     const chatScrollArea = document.getElementById('chatScrollArea');
     const messagesContainer = document.getElementById('messagesContainer');
     const textarea = document.getElementById('userInput');
-    const typingIndicator = document.getElementById('typingIndicator');
     const sendBtn = document.getElementById('sendBtn');
     
-    // Auto-resize textarea
+    // auto-resize textarea
     textarea.addEventListener('input', function() {
         this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
     });
     
     function handleKeyDown(e) {
@@ -323,8 +252,8 @@
         }
     }
     
-    // Scroll hanya untuk chat area
-    function scrollChatToBottom() {
+    // Scroll hanya chat area
+    function scrollToBottomSmooth() {
         setTimeout(() => {
             if (chatScrollArea) {
                 chatScrollArea.scrollTo({
@@ -332,17 +261,7 @@
                     behavior: 'smooth'
                 });
             }
-        }, 80);
-    }
-    
-    function showTyping() {
-        typingIndicator.classList.remove('hidden');
-        gsap.fromTo(typingIndicator, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.2 });
-        scrollChatToBottom();
-    }
-    
-    function hideTyping() {
-        typingIndicator.classList.add('hidden');
+        }, 60);
     }
     
     function getTimeString() {
@@ -359,21 +278,21 @@
         });
     }
     
-    // Markdown + DOMPurify
+    // Markdown + sanitize
     function formatMarkdown(text) {
         try {
             let rawHtml = marked.parse(text);
             return DOMPurify.sanitize(rawHtml, {
-                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'blockquote', 'a'],
-                ALLOWED_ATTR: ['href', 'target']
+                ALLOWED_TAGS: ['p','br','strong','em','ul','ol','li','code','pre','h1','h2','h3','blockquote','a'],
+                ALLOWED_ATTR: ['href','target']
             });
         } catch(e) {
             return escapeHtml(text).replace(/\n/g, '<br>');
         }
     }
     
+    // Menambah pesan user permanen
     function addUserMessage(message) {
-        // Hapus welcome message jika masih ada dan ini chat pertama
         const welcomeDiv = document.getElementById('welcomeMessage');
         if (welcomeDiv && messagesContainer.children.length === 1) {
             welcomeDiv.remove();
@@ -382,7 +301,7 @@
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex gap-3 justify-end message-animate';
         msgDiv.innerHTML = `
-            <div class="flex-1 text-right max-w-[80%]">
+            <div class="flex-1 text-right max-w-[82%]">
                 <div class="user-bubble inline-block px-5 py-3 text-left">
                     <p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>
                 </div>
@@ -393,11 +312,100 @@
             </div>
         `;
         messagesContainer.appendChild(msgDiv);
-        gsap.fromTo(msgDiv, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
-        scrollChatToBottom();
+        gsap.fromTo(msgDiv, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.25 });
+        scrollToBottomSmooth();
+        return msgDiv;
+    }
+    
+    // Membuat temporary message (loading/typing bubble) yang nantinya akan di-replace
+    function createTempBotMessage() {
+        // Hapus temporary sebelumnya jika ada (antisipasi dobel)
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            currentTempMessageDiv.remove();
+        }
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'flex gap-3 message-animate temp-message';
+        tempDiv.setAttribute('data-temp-msg', 'true');
+        tempDiv.innerHTML = `
+            <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
+                <i class="fas fa-feather-alt text-white text-xs"></i>
+            </div>
+            <div class="flex-1 max-w-[82%]">
+                <div class="bot-bubble px-5 py-3.5">
+                    <div class="inline-typing-dots">
+                        <span></span><span></span><span></span>
+                        <span class="text-xs text-gray-500 ml-1.5 font-medium">Myrielle mengetik</span>
+                    </div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1.5 ml-1">${getTimeString()}</div>
+            </div>
+        `;
+        messagesContainer.appendChild(tempDiv);
+        scrollToBottomSmooth();
+        currentTempMessageDiv = tempDiv;
+        return tempDiv;
+    }
+    
+    // Mengganti temporary message dengan respons final (edit bubble)
+    function replaceTempWithFinalResponse(finalText) {
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            const finalContent = formatMarkdown(finalText);
+            // Update DOM element yang sama, ubah jadi pesan final dengan animasi halus
+            const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
+            const timeSpan = currentTempMessageDiv.querySelector('.text-gray-400.mt-1.5');
+            if (bubbleDiv) {
+                bubbleDiv.innerHTML = `<div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${finalContent}</div>`;
+            }
+            if (timeSpan) {
+                timeSpan.innerHTML = getTimeString();
+            }
+            // Hapus atribut temp dan tambah class final
+            currentTempMessageDiv.classList.remove('temp-message');
+            currentTempMessageDiv.removeAttribute('data-temp-msg');
+            // Animasi subtle
+            gsap.fromTo(bubbleDiv, { opacity: 0.8, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.2 });
+            currentTempMessageDiv = null;
+            scrollToBottomSmooth();
+        } else {
+            // Fallback: langsung add bot message jika tidak ada temp
+            addBotMessage(finalText);
+        }
+    }
+    
+    // Jika terjadi error, replace temp dengan pesan error
+    function replaceTempWithError(errorMsg, details = null) {
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
+            const timeSpan = currentTempMessageDiv.querySelector('.text-gray-400.mt-1.5');
+            let detailHtml = '';
+            if (details) {
+                detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500">🔍 detail</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-lg">${escapeHtml(details)}</pre></details>`;
+            }
+            if (bubbleDiv) {
+                bubbleDiv.innerHTML = `
+                    <div class="flex items-start gap-2 text-rose-700">
+                        <i class="fas fa-circle-exclamation mt-0.5"></i>
+                        <div class="flex-1">
+                            <span class="font-medium">⚠️ ${escapeHtml(errorMsg)}</span>
+                            ${detailHtml}
+                            <div class="text-xs text-rose-500/80 mt-1">Silakan coba lagi nanti</div>
+                        </div>
+                    </div>
+                `;
+                bubbleDiv.style.background = '#fff5f5';
+            }
+            if (timeSpan) timeSpan.innerHTML = getTimeString();
+            currentTempMessageDiv.classList.remove('temp-message');
+            currentTempMessageDiv = null;
+            scrollToBottomSmooth();
+        } else {
+            addSystemErrorMessage(errorMsg, details);
+        }
     }
     
     function addBotMessage(content) {
+        // Jika tidak ada temp, buat langsung (untuk keperluan tertentu, misal dari welcome)
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex gap-3 message-animate';
         const formattedHtml = formatMarkdown(content);
@@ -405,7 +413,7 @@
             <div class="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
                 <i class="fas fa-feather-alt text-white text-xs"></i>
             </div>
-            <div class="flex-1 max-w-[80%]">
+            <div class="flex-1 max-w-[82%]">
                 <div class="bot-bubble px-5 py-3.5">
                     <div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${formattedHtml}</div>
                 </div>
@@ -413,8 +421,8 @@
             </div>
         `;
         messagesContainer.appendChild(msgDiv);
-        gsap.fromTo(msgDiv, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(0.2)" });
-        scrollChatToBottom();
+        gsap.fromTo(msgDiv, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3 });
+        scrollToBottomSmooth();
     }
     
     function addSystemErrorMessage(errorMsg, detailRaw = null) {
@@ -438,38 +446,41 @@
             </div>
         `;
         messagesContainer.appendChild(errDiv);
-        scrollChatToBottom();
+        scrollToBottomSmooth();
     }
     
-    // Core API call
+    // Core sendMessage dengan sistem temp message (loading bubble lalu di-replace)
     async function sendMessage() {
         if (isProcessing) return;
         const rawMessage = textarea.value.trim();
         if (!rawMessage) return;
         
         isProcessing = true;
-        const currentMessage = rawMessage;
+        const currentMsg = rawMessage;
         textarea.value = '';
         textarea.style.height = 'auto';
         sendBtn.disabled = true;
         sendBtn.style.opacity = '0.5';
         
-        // hapus welcome jika ada
-        const welcome = document.getElementById('welcomeMessage');
-        if (welcome && messagesContainer.children.length === 1) welcome.remove();
+        // Hapus welcome jika ada
+        const welcomeDiv = document.getElementById('welcomeMessage');
+        if (welcomeDiv && messagesContainer.children.length === 1) welcomeDiv.remove();
         
-        addUserMessage(currentMessage);
-        showTyping();
+        // 1. Tampilkan pesan user
+        addUserMessage(currentMsg);
+        
+        // 2. Tampilkan temporary bubble loading (akan di-replace nanti)
+        createTempBotMessage();
         
         if (abortController) abortController.abort();
         abortController = new AbortController();
-        const timeoutId = setTimeout(() => abortController.abort(), 50000);
+        const timeoutId = setTimeout(() => abortController.abort(), 55000);
         
         try {
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: currentMessage }),
+                body: JSON.stringify({ message: currentMsg }),
                 signal: abortController.signal
             });
             clearTimeout(timeoutId);
@@ -480,26 +491,24 @@
                 data = await response.json();
             } else {
                 const rawText = await response.text();
-                throw new Error(`Server response invalid: ${rawText.substring(0, 120)}`);
+                throw new Error(`Server mengembalikan response tidak valid: ${rawText.substring(0, 100)}`);
             }
             
-            hideTyping();
-            
             if (data && data.success === true && data.response) {
-                addBotMessage(data.response);
+                // 🔁 GANTI temporary message dengan respons final (edit)
+                replaceTempWithFinalResponse(data.response);
             } else {
-                let errText = data?.error || 'Respons tidak dikenali';
+                let errText = data?.error || 'Respons tidak dikenali oleh server';
                 let debugInfo = data?.error_details || (data?.api_response ? JSON.stringify(data.api_response) : null);
-                addSystemErrorMessage(`Gagal memproses: ${errText}`, debugInfo);
+                replaceTempWithError(`Gagal memproses: ${errText}`, debugInfo);
             }
         } catch (err) {
             clearTimeout(timeoutId);
-            hideTyping();
-            let userFriendlyMsg = 'Koneksi bermasalah, coba periksa koneksi internet.';
-            let debugDetail = err.message;
-            if (err.name === 'AbortError') userFriendlyMsg = 'Server merespon lama, coba kirim ulang pesan.';
-            else if (err.message.includes('Failed to fetch')) userFriendlyMsg = 'Tidak dapat terhubung ke server. Pastikan backend berjalan.';
-            addSystemErrorMessage(userFriendlyMsg, debugDetail);
+            let userFriendly = 'Terjadi gangguan koneksi, coba periksa jaringan.';
+            let debugRaw = err.message;
+            if (err.name === 'AbortError') userFriendly = 'Server memakan waktu lama, coba kirim ulang.';
+            else if (err.message.includes('Failed to fetch')) userFriendly = 'Tidak dapat menjangkau server. Pastikan backend berjalan.';
+            replaceTempWithError(userFriendly, debugRaw);
             console.error('Chat error:', err);
         } finally {
             isProcessing = false;
@@ -519,7 +528,7 @@
     
     function clearChat() {
         if (isProcessing) return;
-        // Reset container dengan welcome message fresh
+        // Hapus semua kecuali welcome message fresh
         messagesContainer.innerHTML = `
             <div class="flex gap-3 message-animate" id="welcomeMessage">
                 <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
@@ -538,21 +547,20 @@
                 </div>
             </div>
         `;
-        scrollChatToBottom();
+        // Jika ada temp message yang tersisa, hapus
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) currentTempMessageDiv.remove();
+        currentTempMessageDiv = null;
+        scrollToBottomSmooth();
         textarea.focus();
-        gsap.fromTo('#welcomeMessage', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 });
     }
     
-    // Inisialisasi: pastikan body tidak scroll, hanya chat area
+    // Initial setup: pastikan body tidak scroll, chat area benar
     document.addEventListener('DOMContentLoaded', () => {
         textarea.focus();
-        // Pastikan scroll area hanya di dalam container chat
-        if (chatScrollArea) {
-            chatScrollArea.style.overflowY = 'auto';
-        }
-        // Fix any body scroll
+        // cegah body scroll ganda
         document.body.style.overflow = 'hidden';
         document.documentElement.style.overflow = 'hidden';
+        if (chatScrollArea) chatScrollArea.style.overflowY = 'auto';
     });
 </script>
 </body>

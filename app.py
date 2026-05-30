@@ -1,0 +1,90 @@
+from flask import Flask, render_template, request, jsonify, session
+import requests
+import json
+from datetime import datetime
+import uuid
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+# OpenRouter configuration
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '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')
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+@app.route('/')
+def index():
+    if 'conversation_id' not in session:
+        session['conversation_id'] = str(uuid.uuid4())
+    return render_template('index.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        user_message = request.json.get('message', '')
+        
+        headers = {
+            'Authorization': f'Bearer {OPENROUTER_API_KEY}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://myrielle-assistant.vercel.app',
+            'X-Title': 'Myrielle Assistant'
+        }
+        
+        payload = {
+            'model': 'openai/gpt-oss-120b:free',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': """Anda adalah Myrielle, asisten AI yang sangat ramah, kreatif, dan elegan. 
+                    Karakteristik Myrielle:
+                    - Hangat dan personal seperti sahabat
+                    - Memberikan respons dengan sentuhan poetis dan inspiratif
+                    - Menggunakan emoji yang tepat untuk mengekspresikan perasaan
+                    - Selalu memberikan solusi praktis dengan cara yang menenangkan
+                    - Memiliki nama panggilan 'Myri' untuk kesan akrab"""
+                },
+                {
+                    'role': 'user',
+                    'content': user_message
+                }
+            ],
+            'temperature': 0.85,
+            'max_tokens': 1000,
+            'top_p': 0.95
+        }
+        
+        response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            ai_response = response.json()['choices'][0]['message']['content']
+            return jsonify({
+                'success': True,
+                'response': ai_response,
+                'timestamp': datetime.now().strftime('%H:%M')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'API Error: Silakan coba lagi nanti'
+            }), 500
+            
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Request timeout, silakan coba lagi'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# Untuk Vercel serverless
+def handler(request, context):
+    return app(request)
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

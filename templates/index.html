@@ -93,6 +93,51 @@
         .markdown-content li {
             margin: 4px 0;
         }
+        
+        /* Error message styling */
+        .error-message {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        
+        .error-details {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+        
+        .debug-panel {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        
+        .debug-panel summary {
+            cursor: pointer;
+            color: #6b7280;
+            font-weight: 500;
+            user-select: none;
+        }
+        
+        .debug-panel summary:hover {
+            color: #374151;
+        }
+        
+        .debug-content {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body class="bg-white">
@@ -111,9 +156,14 @@
                         <p class="text-xs text-gray-500">Powered by OpenRouter AI</p>
                     </div>
                 </div>
-                <button onclick="clearChat()" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
-                    <i class="fas fa-trash-alt mr-1"></i> New chat
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="toggleDebugMode()" id="debugBtn" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-bug mr-1"></i> Debug
+                    </button>
+                    <button onclick="clearChat()" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
+                        <i class="fas fa-trash-alt mr-1"></i> New chat
+                    </button>
+                </div>
             </div>
         </header>
         
@@ -192,6 +242,7 @@
     <script>
         let isProcessing = false;
         let conversationHistory = [];
+        let debugMode = false;
         
         // Auto-resize textarea
         const textarea = document.getElementById('userInput');
@@ -199,6 +250,20 @@
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 200) + 'px';
         });
+        
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            const debugBtn = document.getElementById('debugBtn');
+            if (debugMode) {
+                debugBtn.classList.add('bg-gray-900', 'text-white');
+                debugBtn.classList.remove('text-gray-500');
+                addSystemMessage('Debug mode diaktifkan. Semua detail error akan ditampilkan.');
+            } else {
+                debugBtn.classList.remove('bg-gray-900', 'text-white');
+                debugBtn.classList.add('text-gray-500');
+                addSystemMessage('Debug mode dinonaktifkan.');
+            }
+        }
         
         function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -250,11 +315,18 @@
                 if (data.success) {
                     addBotMessage(data.response);
                 } else {
-                    addBotMessage('Maaf, terjadi kesalahan. Silakan coba lagi nanti.');
+                    // Tampilkan semua detail error
+                    addErrorMessage(data);
                 }
             } catch (error) {
                 hideTypingIndicator();
-                addBotMessage('Network error. Silakan periksa koneksi internet Anda.');
+                addErrorMessage({
+                    success: false,
+                    error: 'Network Error',
+                    error_type: 'FetchError',
+                    error_details: error.message,
+                    timestamp: new Date().toLocaleTimeString()
+                });
                 console.error('Error:', error);
             } finally {
                 isProcessing = false;
@@ -284,7 +356,77 @@
             
             messagesDiv.appendChild(messageDiv);
             
-            // Auto scroll to bottom
+            // Remove welcome message if it's still there
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            if (welcomeMsg && messagesDiv.children.length > 1) {
+                welcomeMsg.remove();
+            }
+            
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+        }
+        
+        function addErrorMessage(errorData) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messagesDiv = chatContainer.querySelector('.space-y-6');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 message-animate';
+            
+            let errorHtml = `
+                <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="error-message">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <strong class="text-red-700">Error: ${escapeHtml(errorData.error || 'Unknown Error')}</strong>
+                        </div>
+                        <div class="text-sm text-red-600">
+                            ${errorData.error_details ? `<p><strong>Details:</strong> ${escapeHtml(errorData.error_details)}</p>` : ''}
+                            ${errorData.status_code ? `<p><strong>Status Code:</strong> ${errorData.status_code}</p>` : ''}
+                            ${errorData.error_type ? `<p><strong>Error Type:</strong> ${escapeHtml(errorData.error_type)}</p>` : ''}
+                            ${errorData.timestamp ? `<p><strong>Timestamp:</strong> ${escapeHtml(errorData.timestamp)}</p>` : ''}
+                        </div>
+                    </div>
+            `;
+            
+            // Show full API response if in debug mode
+            if (debugMode && errorData.api_response) {
+                errorHtml += `
+                    <details class="debug-panel">
+                        <summary><i class="fas fa-bug mr-1"></i> Debug Info - Full API Response</summary>
+                        <div class="debug-content">
+                            <p class="text-xs font-mono mb-2"><strong>Response Headers:</strong></p>
+                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData.headers || {}, null, 2))}</pre>
+                            <p class="text-xs font-mono mt-3 mb-2"><strong>Response Body:</strong></p>
+                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData.api_response, null, 2))}</pre>
+                            <p class="text-xs font-mono mt-3 mb-2"><strong>Raw Response Text:</strong></p>
+                            <pre class="error-details">${escapeHtml(errorData.response_text || 'N/A')}</pre>
+                        </div>
+                    </details>
+                `;
+            } else if (debugMode && errorData.error_details) {
+                errorHtml += `
+                    <details class="debug-panel">
+                        <summary><i class="fas fa-bug mr-1"></i> Debug Info - Error Details</summary>
+                        <div class="debug-content">
+                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData, null, 2))}</pre>
+                        </div>
+                    </details>
+                `;
+            }
+            
+            errorHtml += `
+                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
+                </div>
+            `;
+            
+            messageDiv.innerHTML = errorHtml;
+            messagesDiv.appendChild(messageDiv);
+            
             setTimeout(() => {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }, 100);
@@ -293,12 +435,6 @@
         function addBotMessage(message) {
             const chatContainer = document.getElementById('chatMessages');
             const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            // Remove welcome message if it's still there and there are more than 1 message
-            const welcomeMsg = document.getElementById('welcomeMessage');
-            if (welcomeMsg && messagesDiv.children.length > 1) {
-                welcomeMsg.remove();
-            }
             
             const messageDiv = document.createElement('div');
             messageDiv.className = 'flex gap-4 message-animate';
@@ -309,6 +445,32 @@
                 <div class="flex-1">
                     <div class="text-gray-800 leading-relaxed markdown-content">
                         ${formatMessage(message)}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+        }
+        
+        function addSystemMessage(message) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messagesDiv = chatContainer.querySelector('.space-y-6');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 message-animate';
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-info-circle text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="bg-blue-50 text-blue-800 rounded-lg px-4 py-2 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        ${escapeHtml(message)}
                     </div>
                     <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
                 </div>
@@ -364,7 +526,7 @@
         
         function getTime() {
             const now = new Date();
-            return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         
         function sendQuickMessage(message) {

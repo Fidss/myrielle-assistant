@@ -2,24 +2,89 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Myrielle Assistant - AI Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Myrielle Assistant — AI Kreatif</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind + Google Fonts + Font Awesome + Anime.js + GSAP + Marked + DOMPurify -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <style>
         * {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        @keyframes fadeIn {
+        body {
+            background: linear-gradient(145deg, #fafcff 0%, #f2f5fb 100%);
+        }
+        
+        /* Glassmorphism + modern scroll */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+        }
+        
+        .glass-input {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.25s ease;
+        }
+        
+        .glass-input:focus-within {
+            border-color: #3b3f5c;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03), 0 0 0 3px rgba(59, 63, 92, 0.08);
+        }
+        
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #eef2f8;
+            border-radius: 10px;
+        }
+        
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #b9c2d0;
+            border-radius: 10px;
+        }
+        
+        .message-bubble-user {
+            background: #1e293b;
+            color: white;
+            border-radius: 26px;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+        
+        .message-bubble-bot {
+            background: white;
+            border-radius: 26px;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+        
+        @keyframes float-glow {
+            0% { opacity: 0.3; transform: scale(0.96);}
+            100% { opacity: 1; transform: scale(1);}
+        }
+        
+        .message-animate {
+            animation: messageSlide 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+        
+        @keyframes messageSlide {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(18px);
             }
             to {
                 opacity: 1;
@@ -27,550 +92,433 @@
             }
         }
         
-        @keyframes typingBounce {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-8px); opacity: 1; }
-        }
-        
-        .message-animate {
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #9ca3af;
+        /* typing dots premium */
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background-color: #94a3b8;
             border-radius: 50%;
             display: inline-block;
-            animation: typingBounce 1.4s infinite;
+            margin: 0 2px;
+            opacity: 0.6;
+            animation: wave 1.3s infinite ease-in-out;
         }
         
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
         
-        .custom-scroll::-webkit-scrollbar {
-            width: 6px;
+        @keyframes wave {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; background-color: #475569; }
         }
         
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+        .typing-card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 36px;
+            padding: 12px 20px;
+            width: fit-content;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
         }
         
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
+        .suggestion-chip {
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
         }
         
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        .suggestion-chip:hover {
+            transform: translateY(-2px);
+            background: #eef2ff;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.03);
         }
         
         pre {
-            background-color: #f8fafc;
-            padding: 12px;
-            border-radius: 8px;
+            background: #0f172a;
+            padding: 14px;
+            border-radius: 18px;
             overflow-x: auto;
-            margin: 8px 0;
+            color: #e2e8f0;
+            font-size: 13px;
         }
         
         code {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.85em;
         }
         
         .markdown-content p {
             margin-bottom: 12px;
-            line-height: 1.6;
+            line-height: 1.55;
         }
         
         .markdown-content ul, .markdown-content ol {
             margin: 8px 0;
-            padding-left: 24px;
+            padding-left: 1.6rem;
         }
         
-        .markdown-content li {
-            margin: 4px 0;
+        .fa-robot-sparkle {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
         }
         
-        /* Error message styling */
-        .error-message {
-            background-color: #fef2f2;
-            border-left: 4px solid #ef4444;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 8px 0;
+        .btn-send-active {
+            transition: all 0.2s;
         }
         
-        .error-details {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            overflow-x: auto;
-            margin-top: 8px;
-        }
-        
-        .debug-panel {
-            background-color: #f3f4f6;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 8px;
-            font-size: 12px;
-        }
-        
-        .debug-panel summary {
-            cursor: pointer;
-            color: #6b7280;
-            font-weight: 500;
-            user-select: none;
-        }
-        
-        .debug-panel summary:hover {
-            color: #374151;
-        }
-        
-        .debug-content {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #e5e7eb;
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
         }
     </style>
 </head>
-<body class="bg-white">
+<body class="antialiased">
+
+<div class="flex flex-col h-screen">
     
-    <div class="flex flex-col h-screen">
-        
-        <!-- Header - Simple like ChatGPT -->
-        <header class="border-b border-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-10">
-            <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
-                        <i class="fas fa-robot text-white text-sm"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-semibold text-gray-900">Myrielle Assistant</h1>
-                        <p class="text-xs text-gray-500">Powered by OpenRouter AI</p>
-                    </div>
+    <!-- Header Elegan tanpa debug -->
+    <header class="glass-header sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-[#1e293b] to-[#0f172a] rounded-2xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-feather-alt text-white text-base"></i>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="toggleDebugMode()" id="debugBtn" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
-                        <i class="fas fa-bug mr-1"></i> Debug
-                    </button>
-                    <button onclick="clearChat()" class="text-gray-500 hover:text-gray-700 transition text-sm px-3 py-1 rounded-md hover:bg-gray-100">
-                        <i class="fas fa-trash-alt mr-1"></i> New chat
-                    </button>
+                <div>
+                    <h1 class="font-bold text-xl tracking-tight bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Myrielle</h1>
+                    <p class="text-[11px] font-medium text-gray-500 tracking-wide">asisten · imajinatif</p>
                 </div>
             </div>
-        </header>
-        
-        <!-- Main Chat Area -->
-        <div class="flex-1 overflow-hidden">
-            <div id="chatMessages" class="h-full overflow-y-auto custom-scroll">
-                <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
-                    
-                    <!-- Welcome Message -->
-                    <div class="flex gap-4 message-animate" id="welcomeMessage">
-                        <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-robot text-white text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-gray-800 leading-relaxed">
-                                <p>Halo! Saya <strong>Myrielle</strong>, asisten AI Anda. Ada yang bisa saya bantu hari ini?</p>
-                            </div>
-                            <div class="mt-2 flex gap-2 flex-wrap">
-                                <button onclick="sendQuickMessage('Apa itu Myrielle?')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Apa itu Myrielle?
-                                </button>
-                                <button onclick="sendQuickMessage('Bantu saya menulis email')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Bantu menulis email
-                                </button>
-                                <button onclick="sendQuickMessage('Jelaskan AI dengan analogi')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                    Jelaskan AI
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
+            <button onclick="clearChat()" class="group flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/50 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm">
+                <i class="far fa-message-slash group-hover:rotate-[-3deg] transition"></i>
+                <span>Percakapan baru</span>
+            </button>
         </div>
-        
-        <!-- Typing Indicator -->
-        <div id="typingIndicator" class="hidden fixed bottom-24 left-0 right-0">
-            <div class="max-w-3xl mx-auto px-4">
-                <div class="flex gap-4 items-center">
-                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-robot text-white text-xs"></i>
+    </header>
+    
+    <!-- Main Chat Area -->
+    <div class="flex-1 overflow-hidden relative">
+        <div id="chatMessages" class="h-full overflow-y-auto custom-scroll pb-2">
+            <div class="max-w-3xl mx-auto px-5 py-6 space-y-5" id="messagesContainer">
+                <!-- Welcome Enhanced -->
+                <div class="flex gap-4 message-animate" id="welcomeMessage">
+                    <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0">
+                        <i class="fas fa-sparkles text-white text-sm"></i>
                     </div>
-                    <div class="bg-gray-100 rounded-full px-4 py-2">
-                        <div class="flex gap-1">
-                            <span class="typing-dot"></span>
-                            <span class="typing-dot"></span>
-                            <span class="typing-dot"></span>
+                    <div class="flex-1">
+                        <div class="bg-white/80 backdrop-blur-sm rounded-2xl rounded-tl-md p-4 border border-gray-100/80 shadow-sm">
+                            <p class="text-gray-800 font-medium text-lg">Halo, saya <span class="font-semibold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">Myrielle</span> ✨</p>
+                            <p class="text-gray-600 mt-1 leading-relaxed">Asisten AI imajinatif yang siap membantu menulis, menjelaskan, atau sekadar ngobrol santai. Ada yang bisa saya eksplorasi hari ini?</p>
+                        </div>
+                        <div class="mt-3 flex gap-2 flex-wrap">
+                            <button onclick="sendQuickMessage('Ceritakan tentang dirimu, Myrielle')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition flex items-center gap-1"><i class="fas fa-star text-[10px]"></i> Siapa Myrielle?</button>
+                            <button onclick="sendQuickMessage('Buatkan puisi singkat tentang senja')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition flex items-center gap-1"><i class="fas fa-feather-alt"></i> Puisi senja</button>
+                            <button onclick="sendQuickMessage('Tips produktif belajar coding')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition flex items-center gap-1"><i class="fas fa-code"></i> Tips coding</button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Input Area - Like ChatGPT -->
-        <div class="border-t border-gray-200 bg-white/95 backdrop-blur-sm">
-            <div class="max-w-3xl mx-auto px-4 py-4">
-                <div class="relative">
-                    <textarea id="userInput" rows="1" 
-                        placeholder="Kirim pesan ke Myrielle..."
-                        class="w-full resize-none rounded-xl border border-gray-300 focus:border-gray-400 focus:ring-1 focus:ring-gray-400 outline-none py-3 pl-4 pr-12 text-gray-900 placeholder-gray-400 transition"
-                        style="min-height: 52px; max-height: 200px;"
-                        onkeydown="handleKeyDown(event)"
-                    ></textarea>
-                    <button onclick="sendMessage()" id="sendBtn"
-                        class="absolute right-2 bottom-2 text-gray-500 hover:text-gray-700 transition p-2 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-paper-plane text-lg"></i>
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400 text-center mt-3">
-                    Myrielle Assistant dapat membuat kesalahan. Periksa informasi penting.
-                </p>
             </div>
         </div>
     </div>
     
-    <script>
-        let isProcessing = false;
-        let conversationHistory = [];
-        let debugMode = false;
-        
-        // Auto-resize textarea
-        const textarea = document.getElementById('userInput');
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    <!-- Typing Indicator Premium -->
+    <div id="typingIndicator" class="fixed bottom-28 left-0 right-0 z-10 hidden transition-all duration-200">
+        <div class="max-w-3xl mx-auto px-5">
+            <div class="flex gap-3 items-center">
+                <div class="w-9 h-9 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-robot text-white text-sm fa-robot-sparkle"></i>
+                </div>
+                <div class="typing-card flex items-center gap-2">
+                    <div class="typing-dots flex gap-1">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="text-xs text-gray-500 font-medium">Myrielle mengetik</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Input Area premium -->
+    <div class="border-t border-white/50 bg-white/80 backdrop-blur-xl z-10">
+        <div class="max-w-3xl mx-auto px-5 py-5">
+            <div class="relative glass-input rounded-2xl bg-white/90 shadow-md">
+                <textarea id="userInput" rows="1" 
+                    placeholder="Ketik pesan untuk Myrielle..."
+                    class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-14 text-gray-800 placeholder:text-gray-400 text-[15px]"
+                    style="min-height: 54px; max-height: 180px;"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button onclick="sendMessage()" id="sendBtn"
+                    class="absolute right-2 bottom-2 text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100 active:scale-95">
+                    <i class="fas fa-paper-plane text-lg"></i>
+                </button>
+            </div>
+            <div class="flex justify-center gap-3 mt-3 text-[11px] text-gray-400">
+                <span><i class="far fa-keyboard mr-1"></i> Enter untuk kirim</span>
+                <span>•</span>
+                <span><i class="fas fa-microchip"></i> Myrielle AI</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let isProcessing = false;
+    let abortController = null;
+    
+    // elemen
+    const chatContainer = document.getElementById('chatMessages');
+    const messagesDiv = document.getElementById('messagesContainer');
+    const textarea = document.getElementById('userInput');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // auto-resize textarea
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+    });
+    
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isProcessing) sendMessage();
+        }
+    }
+    
+    // Animasi GSAP sederhana
+    function animateNewMessage(element) {
+        gsap.fromTo(element, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+    }
+    
+    function scrollToSmooth() {
+        setTimeout(() => {
+            const container = document.getElementById('chatMessages');
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }, 80);
+    }
+    
+    function showTyping() {
+        typingIndicator.classList.remove('hidden');
+        gsap.fromTo(typingIndicator, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.2 });
+        scrollToSmooth();
+    }
+    
+    function hideTyping() {
+        typingIndicator.classList.add('hidden');
+    }
+    
+    function getTimeString() {
+        return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
         });
+    }
+    
+    // Markdown + sanitize
+    function formatMarkdown(text) {
+        try {
+            let rawHtml = marked.parse(text);
+            return DOMPurify.sanitize(rawHtml, { ALLOWED_TAGS: ['p','br','strong','em','ul','ol','li','code','pre','h1','h2','h3','a','blockquote'], ALLOWED_ATTR: ['href','target'] });
+        } catch(e) {
+            return escapeHtml(text).replace(/\n/g, '<br>');
+        }
+    }
+    
+    function addUserMessage(message) {
+        const welcome = document.getElementById('welcomeMessage');
+        if (welcome && messagesDiv.children.length === 1) welcome.remove();
         
-        function toggleDebugMode() {
-            debugMode = !debugMode;
-            const debugBtn = document.getElementById('debugBtn');
-            if (debugMode) {
-                debugBtn.classList.add('bg-gray-900', 'text-white');
-                debugBtn.classList.remove('text-gray-500');
-                addSystemMessage('Debug mode diaktifkan. Semua detail error akan ditampilkan.');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex gap-3 justify-end message-animate';
+        msgDiv.innerHTML = `
+            <div class="flex-1 text-right max-w-[85%]">
+                <div class="message-bubble-user inline-block px-5 py-3 text-left">
+                    <p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1.5 pr-1">${getTimeString()}</div>
+            </div>
+            <div class="w-8 h-8 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <i class="fas fa-user-astronaut text-gray-600 text-xs"></i>
+            </div>
+        `;
+        messagesDiv.appendChild(msgDiv);
+        animateNewMessage(msgDiv);
+        scrollToSmooth();
+    }
+    
+    function addBotMessage(content) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex gap-3 message-animate';
+        const formattedHtml = formatMarkdown(content);
+        msgDiv.innerHTML = `
+            <div class="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0">
+                <i class="fas fa-feather-alt text-white text-xs"></i>
+            </div>
+            <div class="flex-1 max-w-[85%]">
+                <div class="message-bubble-bot px-5 py-3">
+                    <div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${formattedHtml}</div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1.5 ml-1">${getTimeString()}</div>
+            </div>
+        `;
+        messagesDiv.appendChild(msgDiv);
+        animateNewMessage(msgDiv);
+        scrollToSmooth();
+    }
+    
+    function addSystemErrorMessage(errorMsg, details = null) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'flex gap-3 message-animate';
+        let detailHtml = '';
+        if (details) {
+            detailHtml = `<details class="mt-2 text-xs bg-gray-50 rounded-xl p-2"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail teknis</summary><pre class="text-[11px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-lg">${escapeHtml(details)}</pre></details>`;
+        }
+        errDiv.innerHTML = `
+            <div class="w-8 h-8 bg-rose-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-circle-exclamation text-rose-500 text-xs"></i>
+            </div>
+            <div class="flex-1">
+                <div class="bg-rose-50 border-l-4 border-rose-400 rounded-2xl px-5 py-3">
+                    <div class="flex items-center gap-2 text-rose-700 text-sm font-medium"><i class="fas fa-bolt"></i> ${escapeHtml(errorMsg)}</div>
+                    ${detailHtml}
+                    <div class="text-xs text-rose-600/70 mt-1">Silakan coba lagi nanti ✨</div>
+                </div>
+                <div class="text-[10px] text-gray-400 mt-1 ml-1">${getTimeString()}</div>
+            </div>
+        `;
+        messagesDiv.appendChild(errDiv);
+        animateNewMessage(errDiv);
+        scrollToSmooth();
+    }
+    
+    // API call via OpenRouter (server proxy /chat)
+    async function sendMessage() {
+        if (isProcessing) return;
+        const rawMessage = textarea.value.trim();
+        if (!rawMessage) return;
+        
+        isProcessing = true;
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.5';
+        
+        addUserMessage(rawMessage);
+        
+        // Jika ada welcome message hilangkan
+        const welcomeElem = document.getElementById('welcomeMessage');
+        if(welcomeElem && messagesDiv.children.length > 1) welcomeElem.remove();
+        
+        showTyping();
+        
+        // Abort controller untuk timeout safety
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 45000);
+        
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: rawMessage }),
+                signal: abortController.signal
+            });
+            clearTimeout(timeoutId);
+            
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
             } else {
-                debugBtn.classList.remove('bg-gray-900', 'text-white');
-                debugBtn.classList.add('text-gray-500');
-                addSystemMessage('Debug mode dinonaktifkan.');
-            }
-        }
-        
-        function handleKeyDown(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                if (!isProcessing) {
-                    sendMessage();
-                }
-            }
-        }
-        
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            const message = input.value.trim();
-            
-            if (!message || isProcessing) return;
-            
-            isProcessing = true;
-            input.value = '';
-            input.style.height = 'auto';
-            
-            // Disable send button
-            const sendBtn = document.getElementById('sendBtn');
-            sendBtn.disabled = true;
-            sendBtn.style.opacity = '0.5';
-            
-            // Add user message
-            addUserMessage(message);
-            
-            // Scroll to bottom
-            scrollToBottom();
-            
-            // Show typing indicator
-            showTypingIndicator();
-            
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: message })
-                });
-                
-                const data = await response.json();
-                
-                // Hide typing indicator
-                hideTypingIndicator();
-                
-                if (data.success) {
-                    addBotMessage(data.response);
-                } else {
-                    // Tampilkan semua detail error
-                    addErrorMessage(data);
-                }
-            } catch (error) {
-                hideTypingIndicator();
-                addErrorMessage({
-                    success: false,
-                    error: 'Network Error',
-                    error_type: 'FetchError',
-                    error_details: error.message,
-                    timestamp: new Date().toLocaleTimeString()
-                });
-                console.error('Error:', error);
-            } finally {
-                isProcessing = false;
-                sendBtn.disabled = false;
-                sendBtn.style.opacity = '1';
-                scrollToBottom();
-            }
-        }
-        
-        function addUserMessage(message) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex gap-4 justify-end message-animate';
-            messageDiv.innerHTML = `
-                <div class="flex-1 text-right">
-                    <div class="inline-block bg-gray-100 rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-left">
-                        <p class="text-gray-800">${escapeHtml(message)}</p>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
-                </div>
-                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-user text-gray-600 text-xs"></i>
-                </div>
-            `;
-            
-            messagesDiv.appendChild(messageDiv);
-            
-            // Remove welcome message if it's still there
-            const welcomeMsg = document.getElementById('welcomeMessage');
-            if (welcomeMsg && messagesDiv.children.length > 1) {
-                welcomeMsg.remove();
+                const textResp = await response.text();
+                throw new Error(`Respons server tidak valid: ${textResp.substring(0, 100)}`);
             }
             
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
+            hideTyping();
+            
+            if (data && data.success === true && data.response) {
+                addBotMessage(data.response);
+            } else {
+                // error terstruktur
+                let errorText = data?.error || 'Respons tidak diketahui';
+                let debugRaw = null;
+                if (data?.error_details) debugRaw = data.error_details;
+                else if (data?.api_response) debugRaw = JSON.stringify(data.api_response, null, 2);
+                addSystemErrorMessage(`⚠️ Gagal memproses: ${errorText}`, debugRaw);
+            }
+        } catch (err) {
+            clearTimeout(timeoutId);
+            hideTyping();
+            let errorMsg = 'Terjadi kesalahan koneksi';
+            let debugDetail = err.message;
+            if (err.name === 'AbortError') errorMsg = 'Waktu habis, server lambat. Coba lagi.';
+            else if (err.message.includes('Failed to fetch')) errorMsg = 'Tidak dapat terhubung ke server. Pastikan backend berjalan.';
+            addSystemErrorMessage(errorMsg, debugDetail);
+            console.error('Chat error:', err);
+        } finally {
+            isProcessing = false;
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+            abortController = null;
+            textarea.focus();
         }
-        
-        function addErrorMessage(errorData) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex gap-4 message-animate';
-            
-            let errorHtml = `
-                <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-white text-xs"></i>
+    }
+    
+    function sendQuickMessage(msg) {
+        if (!isProcessing) {
+            textarea.value = msg;
+            sendMessage();
+        }
+    }
+    
+    function clearChat() {
+        if (isProcessing) return;
+        // reset container dengan welcome message yang fresh
+        messagesDiv.innerHTML = `
+            <div class="flex gap-4 message-animate" id="welcomeMessage">
+                <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0">
+                    <i class="fas fa-sparkles text-white text-sm"></i>
                 </div>
                 <div class="flex-1">
-                    <div class="error-message">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-exclamation-circle text-red-500"></i>
-                            <strong class="text-red-700">Error: ${escapeHtml(errorData.error || 'Unknown Error')}</strong>
-                        </div>
-                        <div class="text-sm text-red-600">
-                            ${errorData.error_details ? `<p><strong>Details:</strong> ${escapeHtml(errorData.error_details)}</p>` : ''}
-                            ${errorData.status_code ? `<p><strong>Status Code:</strong> ${errorData.status_code}</p>` : ''}
-                            ${errorData.error_type ? `<p><strong>Error Type:</strong> ${escapeHtml(errorData.error_type)}</p>` : ''}
-                            ${errorData.timestamp ? `<p><strong>Timestamp:</strong> ${escapeHtml(errorData.timestamp)}</p>` : ''}
-                        </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-2xl rounded-tl-md p-4 border border-gray-100/80 shadow-sm">
+                        <p class="text-gray-800 font-medium text-lg">Obrolan segar ✨</p>
+                        <p class="text-gray-600 mt-1 leading-relaxed">Ruang baru dimulai! Myrielle siap mendengar. Ada yang ingin didiskusikan?</p>
                     </div>
-            `;
-            
-            // Show full API response if in debug mode
-            if (debugMode && errorData.api_response) {
-                errorHtml += `
-                    <details class="debug-panel">
-                        <summary><i class="fas fa-bug mr-1"></i> Debug Info - Full API Response</summary>
-                        <div class="debug-content">
-                            <p class="text-xs font-mono mb-2"><strong>Response Headers:</strong></p>
-                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData.headers || {}, null, 2))}</pre>
-                            <p class="text-xs font-mono mt-3 mb-2"><strong>Response Body:</strong></p>
-                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData.api_response, null, 2))}</pre>
-                            <p class="text-xs font-mono mt-3 mb-2"><strong>Raw Response Text:</strong></p>
-                            <pre class="error-details">${escapeHtml(errorData.response_text || 'N/A')}</pre>
-                        </div>
-                    </details>
-                `;
-            } else if (debugMode && errorData.error_details) {
-                errorHtml += `
-                    <details class="debug-panel">
-                        <summary><i class="fas fa-bug mr-1"></i> Debug Info - Error Details</summary>
-                        <div class="debug-content">
-                            <pre class="error-details">${escapeHtml(JSON.stringify(errorData, null, 2))}</pre>
-                        </div>
-                    </details>
-                `;
-            }
-            
-            errorHtml += `
-                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
-                </div>
-            `;
-            
-            messageDiv.innerHTML = errorHtml;
-            messagesDiv.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
-        }
-        
-        function addBotMessage(message) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex gap-4 message-animate';
-            messageDiv.innerHTML = `
-                <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-robot text-white text-xs"></i>
-                </div>
-                <div class="flex-1">
-                    <div class="text-gray-800 leading-relaxed markdown-content">
-                        ${formatMessage(message)}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
-                </div>
-            `;
-            
-            messagesDiv.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
-        }
-        
-        function addSystemMessage(message) {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'flex gap-4 message-animate';
-            messageDiv.innerHTML = `
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-info-circle text-white text-xs"></i>
-                </div>
-                <div class="flex-1">
-                    <div class="bg-blue-50 text-blue-800 rounded-lg px-4 py-2 text-sm">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        ${escapeHtml(message)}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">${getTime()}</div>
-                </div>
-            `;
-            
-            messagesDiv.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
-        }
-        
-        function showTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            indicator.classList.remove('hidden');
-            scrollToBottom();
-        }
-        
-        function hideTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            indicator.classList.add('hidden');
-        }
-        
-        function scrollToBottom() {
-            const chatContainer = document.getElementById('chatMessages');
-            setTimeout(() => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }, 100);
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function formatMessage(text) {
-            // Convert markdown-like syntax
-            let formatted = text
-                // Bold
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                // Italic
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                // Code blocks
-                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
-                // Inline code
-                .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
-                // Line breaks
-                .replace(/\n/g, '<br>');
-            
-            return formatted;
-        }
-        
-        function getTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        
-        function sendQuickMessage(message) {
-            if (!isProcessing) {
-                document.getElementById('userInput').value = message;
-                sendMessage();
-            }
-        }
-        
-        function clearChat() {
-            const chatContainer = document.getElementById('chatMessages');
-            const messagesDiv = chatContainer.querySelector('.space-y-6');
-            
-            // Clear all messages
-            messagesDiv.innerHTML = `
-                <!-- Welcome Message -->
-                <div class="flex gap-4 message-animate" id="welcomeMessage">
-                    <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-robot text-white text-xs"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-gray-800 leading-relaxed">
-                            <p>Chat telah dibersihkan! Ada yang bisa saya bantu?</p>
-                        </div>
-                        <div class="mt-2 flex gap-2 flex-wrap">
-                            <button onclick="sendQuickMessage('Apa itu Myrielle?')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Apa itu Myrielle?
-                            </button>
-                            <button onclick="sendQuickMessage('Bantu saya menulis email')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Bantu menulis email
-                            </button>
-                            <button onclick="sendQuickMessage('Jelaskan AI dengan analogi')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                                Jelaskan AI
-                            </button>
-                        </div>
+                    <div class="mt-3 flex gap-2 flex-wrap">
+                        <button onclick="sendQuickMessage('Ceritakan tentang dirimu, Myrielle')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition"><i class="fas fa-star text-[10px]"></i> Cerita Myrielle</button>
+                        <button onclick="sendQuickMessage('Rekomendasi buku fiksi inspiratif')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition"><i class="fas fa-book-open"></i> Rekomendasi buku</button>
+                        <button onclick="sendQuickMessage('Cara mengatasi rasa malas')" class="suggestion-chip text-xs bg-white/70 border border-gray-200 hover:border-gray-300 text-gray-700 px-3 py-1.5 rounded-full transition"><i class="fas fa-brain"></i> Motivasi</button>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
+        scrollToSmooth();
+        textarea.focus();
+        // animasi sentuhan
+        gsap.fromTo('#welcomeMessage', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.4 });
+    }
+    
+    // focus awal + efek halo subtle
+    document.addEventListener('DOMContentLoaded', () => {
+        textarea.focus();
+        // efek partikel halus tidak berlebihan
+        const containerBg = document.querySelector('body');
+        if(containerBg) {
+            // hanya dekorasi ringan
         }
-        
-        // Focus on input on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('userInput').focus();
-        });
-    </script>
+    });
+</script>
 </body>
 </html>

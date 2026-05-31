@@ -2,18 +2,31 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Myrielle — AI Math Tutor & Student Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Myrielle — AI Assistant · Code Highlight Support</title>
     
+    <!-- Tailwind + Fonts + Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- GSAP + Marked + DOMPurify -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
+    <!-- highlight.js untuk syntax highlighting kode -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+    
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
         
         html, body {
             margin: 0;
@@ -21,596 +34,599 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed;
+            background: radial-gradient(circle at 10% 30%, #f9fafc 0%, #edf2f7 100%);
         }
         
-        .scroll-area::-webkit-scrollbar {
-            width: 6px;
+        .chat-scroll-area {
+            height: 100%;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 8px;
         }
-        .scroll-area::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        
+        .chat-scroll-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-scroll-area::-webkit-scrollbar-track {
+            background: #e9eef3;
             border-radius: 10px;
         }
-        .scroll-area::-webkit-scrollbar-thumb {
-            background: #888;
+        .chat-scroll-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
             border-radius: 10px;
         }
         
-        .topic-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+        .glass-header {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.5);
         }
-        .topic-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.15);
-        }
-        .active-topic {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .user-bubble {
+            background: #0f172a;
             color: white;
+            border-radius: 28px;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         
-        .message-animate {
-            animation: slideFade 0.3s ease-out forwards;
+        .bot-bubble {
+            background: white;
+            border-radius: 28px;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(226, 232, 240, 0.9);
         }
         
         @keyframes slideFade {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(18px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .mode-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
+        .message-animate {
+            animation: slideFade 0.32s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
         }
         
-        .markdown-content pre {
-            background: #1e293b;
-            padding: 12px;
-            border-radius: 12px;
-            overflow-x: auto;
+        /* Typing dots */
+        .custom-typing-dots {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .custom-typing-dots span {
+            width: 7px;
+            height: 7px;
+            background-color: #94a3b8;
+            border-radius: 50%;
+            display: inline-block;
+            animation: gentleTyping 1.2s infinite ease-in-out;
+        }
+        .custom-typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .custom-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .custom-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+        
+        @keyframes gentleTyping {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+        
+        .suggestion-chip {
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.85);
+            border: 1px solid #e2e8f0;
+        }
+        .suggestion-chip:hover {
+            background: #ffffff;
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+        
+        /* MARKDOWN + CODE BLOCK STYLING DENGAN HIGHLIGHT.JS */
+        .markdown-content {
+            line-height: 1.6;
+        }
+        .markdown-content p {
+            margin-bottom: 12px;
+        }
+        .markdown-content ul, .markdown-content ol {
+            margin: 8px 0;
+            padding-left: 1.5rem;
+        }
+        .markdown-content li {
+            margin: 4px 0;
         }
         .markdown-content code {
             background: #f1f5f9;
             padding: 2px 6px;
-            border-radius: 6px;
-            font-family: monospace;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #0f172a;
+        }
+        .markdown-content pre {
+            background: #0d1117;
+            padding: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 16px 0;
+            border: 1px solid #30363d;
+        }
+        .markdown-content pre code {
+            background: transparent;
+            padding: 16px;
+            display: block;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #e6edf3;
+        }
+        /* Highlight.js custom styling lebih rapi */
+        .hljs {
+            background: #0d1117 !important;
+            border-radius: 16px !important;
         }
         
-        .upload-area {
-            border: 2px dashed #cbd5e1;
+        .input-wrapper {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(203, 213, 225, 0.6);
+        }
+        
+        .input-glass {
+            background: white;
+            border: 1px solid #eef2f8;
             transition: all 0.2s;
         }
-        .upload-area:hover, .upload-area.drag-over {
-            border-color: #667eea;
-            background: #f5f3ff;
+        .input-glass:focus-within {
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 3px rgba(148,163,184,0.1);
+        }
+        
+        .h-screen-fixed {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .temp-message {
+            opacity: 0.92;
+        }
+        
+        .time-stamp {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 6px;
+            margin-left: 4px;
+        }
+        
+        /* Tombol copy untuk kode */
+        .code-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 8px 12px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+        }
+        .copy-btn {
+            background: #21262d;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #8b949e;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .copy-btn:hover {
+            background: #30363d;
+            color: #c9d1d9;
         }
     </style>
 </head>
 <body class="antialiased">
-    <div class="flex h-screen">
-        <!-- Sidebar Kiri -->
-        <div class="w-80 bg-white shadow-2xl flex flex-col z-10">
-            <div class="p-6 bg-gradient-to-r from-purple-600 to-indigo-600">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-robot text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-white font-bold text-xl">Myrielle</h1>
-                        <p class="text-white/80 text-xs">AI Math Platform</p>
+<div class="flex flex-col h-screen-fixed w-full">
+    
+    <header class="glass-header flex-shrink-0 z-20">
+        <div class="max-w-3xl mx-auto px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#0f172a] rounded-2xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-feather-alt text-white text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Myrielle</h1>
+                    <div class="flex items-center gap-1.5 mt-0">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <p class="text-[11px] font-medium text-gray-500">support code highlight · Python, JS, dll</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="flex-1 overflow-y-auto scroll-area p-4">
-                <!-- Mode Selector -->
-                <div class="mb-6">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Mode</p>
-                    <div class="flex gap-2">
-                        <button onclick="setMode('chat')" id="modeChatBtn" class="mode-btn active flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-all">
-                            <i class="fas fa-comments mr-1"></i> Chat
-                        </button>
-                        <button onclick="setMode('student')" id="modeStudentBtn" class="mode-btn flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-all">
-                            <i class="fas fa-graduation-cap mr-1"></i> Student
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Materi Matematika (hanya tampil di mode Chat) -->
-                <div id="topicsSection" class="mb-4">
-                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                        <i class="fas fa-book-open mr-1"></i> Materi Matematika
-                    </p>
-                    <div class="space-y-2" id="topicsList">
-                        {% for topic_id, topic in topics.items() %}
-                        <div onclick="loadTopic('{{ topic_id }}')" 
-                             class="topic-card p-3 rounded-xl bg-gray-50 border border-gray-200"
-                             data-topic-id="{{ topic_id }}">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-semibold text-gray-800 text-sm">{{ topic.name }}</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">
-                                        <i class="fas fa-chart-line mr-1"></i>{{ topic.level }}
-                                    </p>
-                                </div>
-                                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                
-                <!-- Tips untuk Student Mode -->
-                <div id="studentTips" class="hidden mt-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
-                    <p class="text-xs font-semibold text-blue-700 mb-2">
-                        <i class="fas fa-lightbulb mr-1"></i> Tips Student Mode
-                    </p>
-                    <ul class="text-xs text-blue-600 space-y-1">
-                        <li>• Upload soal matematika (teks/gambar/foto)</li>
-                        <li>• Support essay & pilihan ganda</li>
-                        <li>• AI akan memberikan jawaban + penjelasan</li>
-                        <li>• Bisa upload file .txt atau tempel teks</li>
-                    </ul>
-                </div>
-            </div>
+            <button onclick="clearChat()" class="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/80 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm border border-gray-200/80">
+                <i class="far fa-message-slash text-sm"></i>
+                <span class="hidden sm:inline">Percakapan baru</span>
+                <span class="sm:hidden">Baru</span>
+            </button>
         </div>
-        
-        <!-- Area Kanan -->
-        <div class="flex-1 flex flex-col bg-gray-50">
-            <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800" id="mainTitle">💬 Myrielle Chat</h2>
-                        <p class="text-sm text-gray-500 mt-1" id="mainDesc">Tanyakan apapun tentang matematika</p>
+    </header>
+    
+    <div class="flex-1 relative min-h-0 overflow-hidden">
+        <div id="chatScrollArea" class="chat-scroll-area h-full">
+            <div class="max-w-3xl mx-auto px-5 py-6 space-y-5 pb-4" id="messagesContainer">
+                <!-- Welcome Message -->
+                <div class="flex gap-3 message-animate" id="welcomeMessage">
+                    <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
+                        <i class="fas fa-sparkles text-white text-sm"></i>
                     </div>
-                    <button id="clearBtn" onclick="clearCurrentMode()" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-                        <i class="fas fa-trash-alt mr-1"></i> Bersihkan
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Chat Mode Content -->
-            <div id="chatModeContent" class="flex-1 overflow-hidden flex">
-                <!-- Kolom Materi -->
-                <div class="w-1/2 border-r border-gray-200 flex flex-col bg-white">
-                    <div class="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 class="font-semibold text-gray-700">
-                            <i class="fas fa-book-reader mr-2 text-purple-500"></i>Materi Pembelajaran
-                        </h3>
-                    </div>
-                    <div class="flex-1 overflow-y-auto scroll-area p-6" id="materialContent">
-                        <div class="text-center text-gray-400 py-20">
-                            <i class="fas fa-folder-open text-5xl mb-3"></i>
-                            <p>Pilih topik untuk melihat materi</p>
+                    <div class="flex-1">
+                        <div class="bot-bubble px-5 py-4">
+                            <p class="text-gray-800 font-bold text-xl leading-tight">Halo, <span class="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Myrielle</span> ✨</p>
+                            <p class="text-gray-600 mt-2 leading-relaxed text-[15px]">Asisten AI imajinatif yang siap membantu coding, menjelaskan konsep, atau membuat program. Coba minta saya untuk menulis kode Python!</p>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Kolom Chat -->
-                <div class="w-1/2 flex flex-col bg-gray-50">
-                    <div class="p-4 bg-gray-50 border-b border-gray-200">
-                        <h3 class="font-semibold text-gray-700">
-                            <i class="fas fa-comments mr-2 text-purple-500"></i>Tanya Myrielle
-                        </h3>
-                    </div>
-                    <div class="flex-1 overflow-y-auto scroll-area p-4" id="chatArea">
-                        <div id="messagesContainer" class="space-y-4">
-                            <!-- Welcome message akan diisi JS -->
-                        </div>
-                    </div>
-                    <div class="p-4 bg-white border-t border-gray-200">
-                        <div class="flex gap-2">
-                            <textarea id="userInput" rows="1" 
-                                placeholder="Tanyakan soal matematika..."
-                                class="flex-1 resize-none rounded-xl border border-gray-300 focus:border-purple-500 outline-none px-4 py-2 text-sm"
-                                style="min-height: 42px; max-height: 100px;"
-                                onkeydown="handleChatKeyDown(event)"></textarea>
-                            <button onclick="sendChatMessage()" id="sendChatBtn"
-                                class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Student Mode Content -->
-            <div id="studentModeContent" class="hidden flex-1 overflow-hidden flex">
-                <div class="w-full flex flex-col">
-                    <!-- Upload Area -->
-                    <div class="bg-white border-b border-gray-200 p-6">
-                        <h3 class="font-semibold text-gray-800 mb-3">
-                            <i class="fas fa-upload mr-2 text-purple-500"></i>Upload Soal Matematika
-                        </h3>
-                        <div class="grid grid-cols-2 gap-6">
-                            <!-- Essay Mode -->
-                            <div class="border rounded-xl p-4 border-gray-200">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <i class="fas fa-pen-alt text-blue-500"></i>
-                                    <h4 class="font-semibold text-gray-700">Essay / Uraian</h4>
-                                </div>
-                                <textarea id="essayQuestion" rows="4" 
-                                    placeholder="Tulis atau tempel soal essay di sini...&#10;&#10;Contoh:&#10;Sebuah persegi panjang memiliki panjang (2x+3) cm dan lebar (x-1) cm. Jika luasnya 35 cm², tentukan nilai x!"
-                                    class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-purple-500 outline-none"></textarea>
-                                <button onclick="solveEssay()" class="mt-3 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                                    <i class="fas fa-solve mr-1"></i> Jawab Soal
-                                </button>
-                            </div>
-                            
-                            <!-- Multiple Choice Mode -->
-                            <div class="border rounded-xl p-4 border-gray-200">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <i class="fas fa-check-square text-green-500"></i>
-                                    <h4 class="font-semibold text-gray-700">Pilihan Ganda</h4>
-                                </div>
-                                <textarea id="mcQuestion" rows="2" 
-                                    placeholder="Tulis soal pilihan ganda..."
-                                    class="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-purple-500 outline-none"></textarea>
-                                <div id="mcOptionsContainer" class="space-y-2 mt-3">
-                                    <input type="text" id="mcOptionA" placeholder="A. ..." class="w-full rounded-lg border border-gray-300 p-2 text-sm">
-                                    <input type="text" id="mcOptionB" placeholder="B. ..." class="w-full rounded-lg border border-gray-300 p-2 text-sm">
-                                    <input type="text" id="mcOptionC" placeholder="C. ..." class="w-full rounded-lg border border-gray-300 p-2 text-sm">
-                                    <input type="text" id="mcOptionD" placeholder="D. ..." class="w-full rounded-lg border border-gray-300 p-2 text-sm">
-                                </div>
-                                <button onclick="solveMultipleChoice()" class="mt-3 w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
-                                    <i class="fas fa-solve mr-1"></i> Jawab Pilihan Ganda
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Info File Upload -->
-                        <div class="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
-                            <i class="fas fa-info-circle mr-1"></i> 
-                            Tips: Tempel teks soal langsung atau upload file .txt. AI akan memberikan jawaban lengkap dengan penjelasan step-by-step.
-                        </div>
-                    </div>
-                    
-                    <!-- Hasil Jawaban Student -->
-                    <div class="flex-1 overflow-y-auto scroll-area p-6 bg-gray-50">
-                        <div class="flex items-center gap-2 mb-4">
-                            <i class="fas fa-clipboard-list text-purple-500"></i>
-                            <h3 class="font-semibold text-gray-700">Hasil Jawaban Myrielle Student</h3>
-                        </div>
-                        <div id="studentAnswers" class="space-y-4">
-                            <div class="text-center text-gray-400 py-10">
-                                <i class="fas fa-cloud-upload-alt text-5xl mb-3"></i>
-                                <p>Upload soal di atas untuk mendapatkan jawaban</p>
-                            </div>
+                        <div class="mt-3 flex gap-2 flex-wrap">
+                            <button onclick="sendQuickMessage('Buatkan program kalkulator sederhana dalam Python dengan fungsi tambah, kurang, kali, bagi')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-python text-blue-500"></i> Kalkulator Python</button>
+                            <button onclick="sendQuickMessage('Buatkan contoh fungsi sorting array dengan JavaScript')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-js text-yellow-500"></i> Sorting JS</button>
+                            <button onclick="sendQuickMessage('Buatkan HTML + CSS card sederhana yang responsif')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-html5 text-orange-500"></i> Card CSS</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="input-wrapper flex-shrink-0">
+        <div class="max-w-3xl mx-auto px-5 py-4 pb-6">
+            <div class="relative input-glass rounded-2xl shadow-sm">
+                <textarea id="userInput" rows="1" 
+                    placeholder="Tulis pesan untuk Myrielle... (contoh: buatkan program python untuk menghitung luas lingkaran)"
+                    class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-14 text-gray-800 placeholder:text-gray-400 text-[15px] leading-relaxed"
+                    style="min-height: 54px; max-height: 140px;"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button onclick="sendMessage()" id="sendBtn"
+                    class="absolute right-2.5 bottom-2.5 text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100">
+                    <i class="fas fa-paper-plane text-lg"></i>
+                </button>
+            </div>
+            <div class="flex justify-center gap-4 mt-3 text-[10px] text-gray-400 font-medium">
+                <span><i class="far fa-keyboard mr-1"></i> Enter · kirim</span>
+                <span class="text-gray-300">•</span>
+                <span><i class="fas fa-code"></i> Syntax highlighting aktif</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script>
-        let currentMode = 'chat';
-        let currentTopic = null;
-        let isProcessing = false;
-        let chatAbortController = null;
-        
-        // DOM Elements
-        const chatArea = document.getElementById('chatArea');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const materialContent = document.getElementById('materialContent');
-        const mainTitle = document.getElementById('mainTitle');
-        const mainDesc = document.getElementById('mainDesc');
-        const topicsSection = document.getElementById('topicsSection');
-        const studentTips = document.getElementById('studentTips');
-        const chatModeContent = document.getElementById('chatModeContent');
-        const studentModeContent = document.getElementById('studentModeContent');
-        
-        function setMode(mode) {
-            currentMode = mode;
-            
-            // Update button styles
-            document.getElementById('modeChatBtn').classList.toggle('active', mode === 'chat');
-            document.getElementById('modeStudentBtn').classList.toggle('active', mode === 'student');
-            
-            if (mode === 'chat') {
-                mainTitle.innerHTML = '💬 Myrielle Chat';
-                mainDesc.innerHTML = 'Tanyakan apapun tentang matematika, AI akan membantu menjelaskan';
-                topicsSection.classList.remove('hidden');
-                studentTips.classList.add('hidden');
-                chatModeContent.classList.remove('hidden');
-                studentModeContent.classList.add('hidden');
-            } else {
-                mainTitle.innerHTML = '🎓 Myrielle Student';
-                mainDesc.innerHTML = 'Upload soal matematika, AI akan menjawab dengan penjelasan lengkap';
-                topicsSection.classList.add('hidden');
-                studentTips.classList.remove('hidden');
-                chatModeContent.classList.add('hidden');
-                studentModeContent.classList.remove('hidden');
-            }
-        }
-        
-        // ============ CHAT MODE FUNCTIONS ============
-        function handleChatKeyDown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (!isProcessing) sendChatMessage();
-            }
-        }
-        
-        function scrollChatToBottom() {
-            setTimeout(() => {
-                if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
-            }, 100);
-        }
-        
-        function getTimeString() {
-            return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-        
-        function formatMarkdown(text) {
-            try {
-                let html = marked.parse(text);
-                return DOMPurify.sanitize(html);
-            } catch(e) {
-                return escapeHtml(text).replace(/\n/g, '<br>');
-            }
-        }
-        
-        function addChatMessage(role, content) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `flex gap-3 message-animate ${role === 'user' ? 'justify-end' : ''}`;
-            
-            if (role === 'user') {
-                msgDiv.innerHTML = `
-                    <div class="flex-1 text-right">
-                        <div class="bg-purple-600 text-white rounded-2xl rounded-tr-none inline-block px-4 py-2 max-w-[90%]">
-                            <p class="text-sm">${escapeHtml(content)}</p>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">${getTimeString()}</p>
-                    </div>
-                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-user text-gray-600 text-xs"></i>
-                    </div>
-                `;
-            } else {
-                msgDiv.innerHTML = `
-                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-robot text-white text-xs"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm border border-gray-200">
-                            <div class="markdown-content text-gray-700 text-sm">${formatMarkdown(content)}</div>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">Myrielle · ${getTimeString()}</p>
-                    </div>
-                `;
-            }
-            messagesContainer.appendChild(msgDiv);
-            scrollChatToBottom();
-            return msgDiv;
-        }
-        
-        let tempChatDiv = null;
-        
-        async function sendChatMessage() {
-            if (isProcessing) return;
-            const message = document.getElementById('userInput').value.trim();
-            if (!message) return;
-            
-            isProcessing = true;
-            const inputField = document.getElementById('userInput');
-            const sendBtn = document.getElementById('sendChatBtn');
-            inputField.value = '';
-            inputField.style.height = 'auto';
-            sendBtn.disabled = true;
-            
-            addChatMessage('user', message);
-            
-            // Typing indicator
-            tempChatDiv = addChatMessage('bot', '<div class="typing-dots flex gap-1"><span class="inline-block w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse">●</span><span class="inline-block w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse delay-75">●</span><span class="inline-block w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse delay-150">●</span></div>');
-            
-            const topicContext = currentTopic ? currentTopic.name : '';
-            
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, topic_context: topicContext })
-                });
-                
-                const data = await response.json();
-                
-                if (tempChatDiv && tempChatDiv.parentNode) {
-                    const bubbleDiv = tempChatDiv.querySelector('.bg-white');
-                    const timeSpan = tempChatDiv.querySelector('.text-gray-400');
-                    if (bubbleDiv && data.success) {
-                        bubbleDiv.innerHTML = `<div class="markdown-content text-gray-700 text-sm">${formatMarkdown(data.response)}</div>`;
-                        if (timeSpan) timeSpan.innerHTML = `Myrielle · ${getTimeString()}`;
-                    } else if (bubbleDiv) {
-                        bubbleDiv.innerHTML = `<div class="text-red-600 text-sm">⚠️ ${data.error || 'Terjadi kesalahan'}</div>`;
-                    }
+<script>
+    let isProcessing = false;
+    let abortController = null;
+    let currentTempMessageDiv = null;
+    
+    const chatScrollArea = document.getElementById('chatScrollArea');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const textarea = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // Konfigurasi marked dengan highlight.js
+    marked.setOptions({
+        highlight: function(code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    return hljs.highlight(code, { language: lang }).value;
+                } catch (err) {
+                    console.error('Highlight error:', err);
                 }
-            } catch (error) {
-                if (tempChatDiv && tempChatDiv.parentNode) {
-                    const bubbleDiv = tempChatDiv.querySelector('.bg-white');
-                    if (bubbleDiv) {
-                        bubbleDiv.innerHTML = `<div class="text-red-600 text-sm">⚠️ Koneksi bermasalah. Coba lagi nanti.</div>`;
-                    }
-                }
-            } finally {
-                isProcessing = false;
-                sendBtn.disabled = false;
-                inputField.focus();
-                tempChatDiv = null;
             }
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+    
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+    });
+    
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isProcessing) sendMessage();
         }
-        
-        async function loadTopic(topicId) {
-            // Update active styling
-            document.querySelectorAll('.topic-card').forEach(card => {
-                card.classList.remove('active-topic');
-                card.style.background = '';
-            });
-            const activeCard = document.querySelector(`[data-topic-id="${topicId}"]`);
-            if (activeCard) {
-                activeCard.classList.add('active-topic');
-                activeCard.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                activeCard.style.color = 'white';
-            }
-            
-            try {
-                const response = await fetch(`/get_topic/${topicId}`);
-                const data = await response.json();
-                if (data.success) {
-                    currentTopic = data.topic;
-                    document.getElementById('mainTitle').innerHTML = `📚 ${currentTopic.name}`;
-                    const formattedContent = formatMarkdown(currentTopic.content);
-                    materialContent.innerHTML = `<div class="markdown-content prose max-w-none">${formattedContent}</div>`;
-                    
-                    addChatMessage('bot', `Saya akan membantu Anda belajar tentang **${currentTopic.name}**. Ada konsep atau soal yang ingin ditanyakan? 🤗`);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-        
-        // ============ STUDENT MODE FUNCTIONS ============
-        async function solveEssay() {
-            const question = document.getElementById('essayQuestion').value.trim();
-            if (!question) {
-                alert('Silakan tulis soal essay terlebih dahulu');
-                return;
-            }
-            
-            addStudentAnswer(`📝 **Soal Essay:**\n${question}`, 'user');
-            document.getElementById('essayQuestion').value = '';
-            
-            addStudentAnswer('<div class="typing-dots">Myrielle sedang memikirkan jawaban...</div>', 'loading');
-            
-            try {
-                const response = await fetch('/solve_question', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question, type: 'essay' })
-                });
-                const data = await response.json();
-                
-                removeLastLoading();
-                if (data.success) {
-                    addStudentAnswer(`✅ **Jawaban Myrielle Student**\n\n${data.answer}`, 'bot');
-                } else {
-                    addStudentAnswer(`❌ Error: ${data.error}`, 'error');
-                }
-            } catch (error) {
-                removeLastLoading();
-                addStudentAnswer(`❌ Gagal terhubung ke server: ${error.message}`, 'error');
-            }
-        }
-        
-        async function solveMultipleChoice() {
-            const question = document.getElementById('mcQuestion').value.trim();
-            const options = [
-                document.getElementById('mcOptionA').value,
-                document.getElementById('mcOptionB').value,
-                document.getElementById('mcOptionC').value,
-                document.getElementById('mcOptionD').value
-            ].filter(opt => opt.trim());
-            
-            if (!question) {
-                alert('Silakan tulis soal pilihan ganda');
-                return;
-            }
-            if (options.length < 2) {
-                alert('Minimal 2 pilihan jawaban');
-                return;
-            }
-            
-            addStudentAnswer(`📝 **Soal Pilihan Ganda:**\n${question}\n\n**Pilihan:**\n${options.map((opt, i) => `${String.fromCharCode(65+i)}. ${opt}`).join('\n')}`, 'user');
-            
-            addStudentAnswer('<div class="typing-dots">Myrielle menganalisis soal...</div>', 'loading');
-            
-            try {
-                const response = await fetch('/solve_question', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question, type: 'multiple_choice', options: options })
-                });
-                const data = await response.json();
-                
-                removeLastLoading();
-                if (data.success) {
-                    addStudentAnswer(`✅ **Jawaban Myrielle Student**\n\n${data.answer}`, 'bot');
-                } else {
-                    addStudentAnswer(`❌ Error: ${data.error}`, 'error');
-                }
-            } catch (error) {
-                removeLastLoading();
-                addStudentAnswer(`❌ Gagal terhubung ke server: ${error.message}`, 'error');
-            }
-        }
-        
-        function addStudentAnswer(content, type) {
-            const answersDiv = document.getElementById('studentAnswers');
-            
-            // Remove empty state if exists
-            if (answersDiv.children.length === 1 && answersDiv.children[0].classList?.contains('text-center')) {
-                answersDiv.innerHTML = '';
-            }
-            
-            const answerDiv = document.createElement('div');
-            answerDiv.className = `p-4 rounded-xl message-animate ${type === 'user' ? 'bg-purple-50 border-l-4 border-purple-500' : type === 'bot' ? 'bg-green-50 border-l-4 border-green-500' : type === 'error' ? 'bg-red-50 border-l-4 border-red-500' : 'bg-gray-50'}`;
-            
-            if (type === 'loading') {
-                answerDiv.id = 'loadingAnswer';
-                answerDiv.innerHTML = `<div class="flex items-center gap-2 text-gray-500"><i class="fas fa-spinner fa-pulse"></i> <span>${content}</span></div>`;
-            } else {
-                answerDiv.innerHTML = `<div class="markdown-content text-sm">${formatMarkdown(content)}</div>`;
-            }
-            answersDiv.appendChild(answerDiv);
-            answersDiv.parentElement?.parentElement?.scrollTo({ top: answersDiv.parentElement.scrollHeight, behavior: 'smooth' });
-        }
-        
-        function removeLastLoading() {
-            const loadingDiv = document.getElementById('loadingAnswer');
-            if (loadingDiv) loadingDiv.remove();
-        }
-        
-        function clearCurrentMode() {
-            if (currentMode === 'chat') {
-                messagesContainer.innerHTML = '';
-                addChatMessage('bot', 'Halo! Saya Myrielle, AI Math Tutor. 👋 Ada yang bisa saya bantu?');
-            } else {
-                document.getElementById('studentAnswers').innerHTML = `
-                    <div class="text-center text-gray-400 py-10">
-                        <i class="fas fa-cloud-upload-alt text-5xl mb-3"></i>
-                        <p>Upload soal di atas untuk mendapatkan jawaban</p>
-                    </div>
-                `;
-                document.getElementById('essayQuestion').value = '';
-                document.getElementById('mcQuestion').value = '';
-                ['A', 'B', 'C', 'D'].forEach(letter => {
-                    const input = document.getElementById(`mcOption${letter}`);
-                    if (input) input.value = '';
+    }
+    
+    function scrollToBottomSmooth() {
+        setTimeout(() => {
+            if (chatScrollArea) {
+                chatScrollArea.scrollTo({
+                    top: chatScrollArea.scrollHeight,
+                    behavior: 'smooth'
                 });
             }
-        }
-        
-        // Initial welcome
-        addChatMessage('bot', 'Halo! Saya Myrielle, AI Math Tutor. 👋 Pilih materi di sebelah kiri, atau langsung tanyakan soal matematika apapun!');
-        
-        // Auto-resize textarea
-        const chatInput = document.getElementById('userInput');
-        chatInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        }, 70);
+    }
+    
+    function getTimeString() {
+        return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
         });
-    </script>
+    }
+    
+    // Format markdown dengan syntax highlighting
+    function formatMarkdown(text) {
+        try {
+            let rawHtml = marked.parse(text);
+            let sanitized = DOMPurify.sanitize(rawHtml, {
+                ALLOWED_TAGS: ['p','br','strong','em','ul','ol','li','code','pre','h1','h2','h3','blockquote','a','span','div','i','b','table','thead','tbody','tr','th','td'],
+                ALLOWED_ATTR: ['href','target','class','id']
+            });
+            return sanitized;
+        } catch(e) {
+            return escapeHtml(text).replace(/\n/g, '<br>');
+        }
+    }
+    
+    function addUserMessage(message) {
+        const welcomeDiv = document.getElementById('welcomeMessage');
+        if (welcomeDiv && messagesContainer.children.length === 1) {
+            welcomeDiv.remove();
+        }
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex gap-3 justify-end message-animate';
+        msgDiv.innerHTML = `
+            <div class="flex-1 text-right max-w-[84%]">
+                <div class="user-bubble inline-block px-5 py-3 text-left">
+                    <p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>
+                </div>
+                <div class="time-stamp text-right pr-1">${getTimeString()}</div>
+            </div>
+            <div class="w-8 h-8 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <i class="fas fa-user-astronaut text-gray-600 text-xs"></i>
+            </div>
+        `;
+        messagesContainer.appendChild(msgDiv);
+        gsap.fromTo(msgDiv, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25 });
+        scrollToBottomSmooth();
+        return msgDiv;
+    }
+    
+    function createTempBotMessage() {
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            currentTempMessageDiv.remove();
+        }
+        const tempDiv = document.createElement('div');
+        tempDiv.className = 'flex gap-3 message-animate temp-message';
+        tempDiv.setAttribute('data-temp-msg', 'true');
+        tempDiv.innerHTML = `
+            <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
+                <i class="fas fa-feather-alt text-white text-xs"></i>
+            </div>
+            <div class="flex-1 max-w-[84%]">
+                <div class="bot-bubble px-5 py-3.5">
+                    <div class="custom-typing-dots">
+                        <span></span><span></span><span></span>
+                        <span class="text-xs text-gray-500 ml-2 font-medium">Myrielle sedang menulis kode...</span>
+                    </div>
+                </div>
+                <div class="time-stamp">${getTimeString()}</div>
+            </div>
+        `;
+        messagesContainer.appendChild(tempDiv);
+        scrollToBottomSmooth();
+        currentTempMessageDiv = tempDiv;
+        return tempDiv;
+    }
+    
+    function replaceTempWithFinalResponse(finalText) {
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            const finalContent = formatMarkdown(finalText);
+            const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
+            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
+            if (bubbleDiv) {
+                bubbleDiv.innerHTML = `<div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${finalContent}</div>`;
+                // Trigger highlight untuk semua block code di dalam bubble
+                bubbleDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }
+            if (timeSpan) {
+                timeSpan.innerHTML = getTimeString();
+            }
+            currentTempMessageDiv.classList.remove('temp-message');
+            currentTempMessageDiv.removeAttribute('data-temp-msg');
+            gsap.fromTo(bubbleDiv, { opacity: 0.9, y: 2 }, { opacity: 1, y: 0, duration: 0.2 });
+            currentTempMessageDiv = null;
+            scrollToBottomSmooth();
+        } else {
+            addBotMessage(finalText);
+        }
+    }
+    
+    function replaceTempWithError(errorMsg, details = null) {
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+            const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
+            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
+            let detailHtml = '';
+            if (details) {
+                detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-xl">${escapeHtml(details)}</pre></details>`;
+            }
+            if (bubbleDiv) {
+                bubbleDiv.innerHTML = `
+                    <div class="flex items-start gap-2 text-rose-700">
+                        <i class="fas fa-circle-exclamation mt-0.5"></i>
+                        <div class="flex-1">
+                            <span class="font-medium">⚠️ ${escapeHtml(errorMsg)}</span>
+                            ${detailHtml}
+                            <div class="text-xs text-rose-500/80 mt-1.5">Coba lagi ya ✨</div>
+                        </div>
+                    </div>
+                `;
+                bubbleDiv.style.background = '#fff5f5';
+            }
+            if (timeSpan) timeSpan.innerHTML = getTimeString();
+            currentTempMessageDiv.classList.remove('temp-message');
+            currentTempMessageDiv = null;
+            scrollToBottomSmooth();
+        } else {
+            addSystemErrorMessage(errorMsg, details);
+        }
+    }
+    
+    function addBotMessage(content) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex gap-3 message-animate';
+        const formattedHtml = formatMarkdown(content);
+        msgDiv.innerHTML = `
+            <div class="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
+                <i class="fas fa-feather-alt text-white text-xs"></i>
+            </div>
+            <div class="flex-1 max-w-[84%]">
+                <div class="bot-bubble px-5 py-3.5">
+                    <div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${formattedHtml}</div>
+                </div>
+                <div class="time-stamp">${getTimeString()}</div>
+            </div>
+        `;
+        messagesContainer.appendChild(msgDiv);
+        msgDiv.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        gsap.fromTo(msgDiv, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3 });
+        scrollToBottomSmooth();
+    }
+    
+    function addSystemErrorMessage(errorMsg, detailRaw = null) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'flex gap-3 message-animate';
+        let detailHtml = '';
+        if (detailRaw) {
+            detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail teknis</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-xl">${escapeHtml(detailRaw)}</pre></details>`;
+        }
+        errDiv.innerHTML = `
+            <div class="w-8 h-8 bg-rose-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-circle-exclamation text-rose-500 text-sm"></i>
+            </div>
+            <div class="flex-1">
+                <div class="bg-rose-50 border-l-4 border-rose-400 rounded-2xl px-5 py-3">
+                    <div class="flex items-center gap-2 text-rose-700 text-sm font-medium"><i class="fas fa-bolt"></i> ${escapeHtml(errorMsg)}</div>
+                    ${detailHtml}
+                    <div class="text-xs text-rose-500/80 mt-1">Coba kirim ulang nanti ✨</div>
+                </div>
+                <div class="time-stamp">${getTimeString()}</div>
+            </div>
+        `;
+        messagesContainer.appendChild(errDiv);
+        scrollToBottomSmooth();
+    }
+    
+    async function sendMessage() {
+        if (isProcessing) return;
+        const rawMessage = textarea.value.trim();
+        if (!rawMessage) return;
+        
+        isProcessing = true;
+        const currentMsg = rawMessage;
+        textarea.value = '';
+        textarea.style.height = 'auto';
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.5';
+        
+        const welcomeDiv = document.getElementById('welcomeMessage');
+        if (welcomeDiv && messagesContainer.children.length === 1) welcomeDiv.remove();
+        
+        addUserMessage(currentMsg);
+        createTempBotMessage();
+        
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 60000);
+        
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: currentMsg }),
+                signal: abortController.signal
+            });
+            clearTimeout(timeoutId);
+            
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const rawText = await response.text();
+                throw new Error(`Server response invalid: ${rawText.substring(0, 100)}`);
+            }
+            
+            if (data && data.success === true && data.response) {
+                replaceTempWithFinalResponse(data.response);
+            } else {
+                let errText = data?.error || 'Response tidak dikenali';
+                let debugInfo = data?.error_details || (data?.api_response ? JSON.stringify(data.api_response) : null);
+                replaceTempWithError(`Gagal: ${errText}`, debugInfo);
+            }
+        } catch (err) {
+            clearTimeout(timeoutId);
+            let userFriendly = 'Koneksi terganggu, cek jaringan.';
+            let debugRaw = err.message;
+            if (err.name === 'AbortError') userFriendly = 'Myrielle kehabisan waktu, coba kirim ulang.';
+            else if (err.message.includes('Failed to fetch')) userFriendly = 'Server tidak merespon. Pastikan backend berjalan.';
+            replaceTempWithError(userFriendly, debugRaw);
+            console.error('Chat error:', err);
+        } finally {
+            isProcessing = false;
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+            abortController = null;
+            textarea.focus();
+        }
+    }
+    
+    function sendQuickMessage(msg) {
+        if (!isProcessing) {
+            textarea.value = msg;
+            sendMessage();
+        }
+    }
+    
+    function clearChat() {
+        if (isProcessing) return;
+        messagesContainer.innerHTML = `
+            <div class="flex gap-3 message-animate" id="welcomeMessage">
+                <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
+                    <i class="fas fa-sparkles text-white text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="bot-bubble px-5 py-4">
+                        <p class="text-gray-800 font-bold text-xl leading-tight">Obrolan segar ✨</p>
+                        <p class="text-gray-600 mt-2 leading-relaxed text-[15px]">Myrielle siap membantu coding & diskusi kode.</p>
+                    </div>
+                    <div class="mt-3 flex gap-2 flex-wrap">
+                        <button onclick="sendQuickMessage('Buatkan program python kalkulator sederhana')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-python"></i> Kalkulator Python</button>
+                        <button onclick="sendQuickMessage('Buatkan fungsi JavaScript untuk palindrome')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-js"></i> Palindrome JS</button>
+                        <button onclick="sendQuickMessage('Buatkan HTML card dengan flexbox')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-css3-alt"></i> Flexbox Card</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) currentTempMessageDiv.remove();
+        currentTempMessageDiv = null;
+        scrollToBottomSmooth();
+        textarea.focus();
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        textarea.focus();
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        if (chatScrollArea) chatScrollArea.style.overflowY = 'auto';
+    });
+</script>
 </body>
 </html>

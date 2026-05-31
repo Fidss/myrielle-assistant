@@ -2,13 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Myrielle — AI Assistant with Model Selection</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Myrielle AI — Direct API · File Upload</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -16,77 +14,62 @@
     
     <style>
         * { font-family: 'Inter', sans-serif; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: radial-gradient(circle at 10% 30%, #f9fafc 0%, #edf2f7 100%); }
-        .chat-scroll-area { height: 100%; overflow-y: auto; scroll-behavior: smooth; }
-        .chat-scroll-area::-webkit-scrollbar { width: 5px; }
-        .chat-scroll-area::-webkit-scrollbar-track { background: #e9eef3; border-radius: 10px; }
-        .chat-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .glass-header { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(24px); border-bottom: 1px solid rgba(203, 213, 225, 0.5); }
+        body { background: radial-gradient(circle at 10% 30%, #f9fafc 0%, #edf2f7 100%); min-height: 100vh; }
+        .chat-container { max-height: calc(100vh - 200px); overflow-y: auto; }
         .user-bubble { background: #0f172a; color: white; border-radius: 28px; border-bottom-right-radius: 8px; }
-        .bot-bubble { background: white; border-radius: 28px; border-bottom-left-radius: 8px; border: 1px solid rgba(226, 232, 240, 0.9); }
-        @keyframes slideFade { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        .message-animate { animation: slideFade 0.32s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards; }
-        .custom-typing-dots { display: flex; align-items: center; gap: 5px; }
-        .custom-typing-dots span { width: 7px; height: 7px; background-color: #94a3b8; border-radius: 50%; animation: gentleTyping 1.2s infinite ease-in-out; }
-        .custom-typing-dots span:nth-child(1) { animation-delay: 0s; }
-        .custom-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
-        .custom-typing-dots span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes gentleTyping { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-5px); opacity: 1; } }
-        .markdown-content { line-height: 1.6; }
-        .markdown-content pre { background: #0d1117; border-radius: 16px; overflow: hidden; margin: 16px 0; }
-        .markdown-content pre code { background: transparent; padding: 16px; display: block; overflow-x: auto; font-family: 'JetBrains Mono', monospace; }
-        .input-wrapper { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(20px); border-top: 1px solid rgba(203, 213, 225, 0.6); }
-        .input-glass { background: white; border: 1px solid #eef2f8; }
-        .input-glass:focus-within { border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(148,163,184,0.1); }
-        .file-chip { background: #f1f5f9; border-radius: 40px; padding: 5px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; }
-        .toast-notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 24px; border-radius: 48px; z-index: 1000; animation: slideUp 0.3s ease; }
+        .bot-bubble { background: white; border-radius: 28px; border-bottom-left-radius: 8px; border: 1px solid #e2e8f0; }
+        .typing-dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; margin: 0 2px; animation: typing 1.4s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-8px); opacity: 1; } }
+        .markdown-content pre { background: #0d1117; border-radius: 12px; padding: 12px; overflow-x: auto; }
+        .markdown-content code { font-family: 'JetBrains Mono', monospace; }
+        .file-preview { background: #f1f5f9; border-radius: 20px; padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 10px 20px; border-radius: 40px; z-index: 1000; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     </style>
 </head>
 <body>
-    <!-- Header and Model Selection UI (same as before but with better error handling) -->
-    <div class="flex flex-col h-screen w-full">
-        <header class="glass-header flex-shrink-0 z-20">
-            <div class="max-w-3xl mx-auto px-5 py-3 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-[#1e293b] to-[#0f172a] rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-feather-alt text-white text-sm"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-extrabold text-xl">Myrielle</h1>
-                        <div class="flex items-center gap-1.5">
-                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                            <p class="text-[11px] font-medium text-gray-500">Multi-Model · File Upload</p>
-                        </div>
-                    </div>
+    <div class="max-w-3xl mx-auto px-4 py-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-feather-alt text-white text-sm"></i>
                 </div>
-                <div class="flex gap-2">
-                    <button id="modelSelectBtn" class="flex items-center gap-2 text-sm font-medium bg-white/90 rounded-full px-4 py-2 shadow-sm border">
-                        <i class="fas fa-brain"></i>
-                        <span id="currentModelLabel">Kimi K2.6</span>
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
-                    <button onclick="clearChat()" class="text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/80 rounded-full px-4 py-2 shadow-sm border">
-                        <i class="far fa-message-slash"></i>
-                        <span class="hidden sm:inline ml-1">Baru</span>
-                    </button>
+                <div>
+                    <h1 class="font-bold text-xl">Myrielle</h1>
+                    <p class="text-xs text-gray-500">Direct API · Pilih Model</p>
                 </div>
             </div>
-        </header>
+            <div class="flex gap-2">
+                <select id="modelSelect" class="text-sm border rounded-full px-4 py-2 bg-white shadow-sm">
+                    <option value="moonshotai/kimi-k2.6:free">🌙 Kimi K2.6</option>
+                    <option value="openai/gpt-oss-20b:free">🤖 GPT-OSS 20B</option>
+                    <option value="google/gemma-4-31b-it:free">🔵 Gemma 4 31B</option>
+                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">🐉 Qwen 3 Next 80B</option>
+                    <option value="meta-llama/llama-3.3-70b-instruct:free">🦙 Llama 3.3 70B</option>
+                </select>
+                <button onclick="clearChat()" class="text-sm border rounded-full px-4 py-2 bg-white shadow-sm hover:bg-gray-50">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
 
         <!-- Chat Area -->
-        <div class="flex-1 relative overflow-hidden">
-            <div id="chatScrollArea" class="chat-scroll-area h-full">
-                <div class="max-w-3xl mx-auto px-5 py-6 space-y-5" id="messagesContainer">
-                    <div class="flex gap-3 message-animate" id="welcomeMessage">
-                        <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center">
-                            <i class="fas fa-sparkles text-white text-sm"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="bot-bubble px-5 py-4">
-                                <p class="text-gray-800 font-bold text-xl">Myrielle Assistant ✨</p>
-                                <p class="text-gray-600 mt-2">Upload file, ganti model AI, dan mulai bertanya! Jika terjadi error rate limit, sistem akan otomatis mencoba model alternatif.</p>
-                            </div>
+        <div id="chatArea" class="chat-container bg-white/40 rounded-2xl p-4 mb-4 space-y-4" style="height: calc(100vh - 200px); overflow-y: auto;">
+            <div class="flex gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-sparkles text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="bot-bubble px-4 py-3">
+                        <p class="font-bold">Halo! Saya Myrielle ✨</p>
+                        <p class="text-sm text-gray-600 mt-1">Saya bisa membantu coding, menjawab pertanyaan, dan menganalisis file yang diupload. Coba upload gambar atau dokumen!</p>
+                        <div class="flex gap-2 mt-3 flex-wrap">
+                            <button onclick="sendQuick('Buat kalkulator Python sederhana')" class="text-xs bg-gray-100 px-3 py-1 rounded-full">🐍 Kalkulator Python</button>
+                            <button onclick="sendQuick('Buat fungsi sorting array JavaScript')" class="text-xs bg-gray-100 px-3 py-1 rounded-full">📜 Sorting JS</button>
+                            <button onclick="sendQuick('Jelaskan async/await')" class="text-xs bg-gray-100 px-3 py-1 rounded-full">⚡ Async/Await</button>
                         </div>
                     </div>
                 </div>
@@ -94,127 +77,300 @@
         </div>
 
         <!-- Input Area -->
-        <div class="input-wrapper flex-shrink-0">
-            <div class="max-w-3xl mx-auto px-5 py-3 pb-5">
-                <div id="attachmentPreview" class="flex flex-wrap gap-2 mb-2 min-h-[40px]"></div>
-                <div class="relative input-glass rounded-2xl shadow-sm">
-                    <textarea id="userInput" rows="1" placeholder="Kirim pesan... atau upload file (gambar, PDF, txt, kode)" class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-28 text-gray-800 text-[15px]" style="min-height: 54px; max-height: 120px;" onkeydown="handleKeyDown(event)"></textarea>
-                    <div class="absolute right-2 bottom-2 flex gap-1">
-                        <label for="fileInput" class="cursor-pointer p-2.5 rounded-xl hover:bg-gray-100 text-gray-500">
-                            <i class="fas fa-paperclip text-lg"></i>
-                        </label>
-                        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.md,.py,.js,.html,.css,.json" multiple style="display: none;" onchange="handleFiles(this.files)">
-                        <button onclick="sendMessage()" id="sendBtn" class="text-gray-400 hover:text-gray-800 p-2.5 rounded-xl hover:bg-gray-100">
-                            <i class="fas fa-paper-plane text-lg"></i>
-                        </button>
-                    </div>
-                </div>
+        <div class="bg-white rounded-2xl shadow-lg p-3">
+            <div id="filePreview" class="flex flex-wrap gap-2 mb-2"></div>
+            <div class="flex gap-2">
+                <textarea id="messageInput" rows="1" placeholder="Tanya apa saja... atau upload file (gambar, PDF, txt, kode)" 
+                    class="flex-1 resize-none border-0 focus:ring-0 outline-none text-sm py-2 px-3" 
+                    style="min-height: 44px; max-height: 100px;"
+                    onkeydown="if(event.key=='Enter' && !event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+                <label for="fileInput" class="cursor-pointer p-2 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-paperclip text-gray-500"></i>
+                </label>
+                <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.md,.py,.js,.html,.css,.json" style="display:none" onchange="handleFiles(this.files)">
+                <button onclick="sendMessage()" id="sendBtn" class="bg-gray-900 text-white px-4 rounded-full hover:bg-gray-800">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
-        </div>
-    </div>
-
-    <div id="modelPanel" class="hidden fixed inset-0 z-30 bg-black/30 backdrop-blur-sm" onclick="toggleModelPanel()">
-        <div class="bg-white rounded-2xl max-w-md mx-auto mt-20 overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-4 border-b flex justify-between">
-                <h3 class="font-bold">Pilih Model AI</h3>
-                <button onclick="toggleModelPanel()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="p-2 space-y-1 max-h-80 overflow-y-auto">
-                <div data-model="moonshotai/kimi-k2.6:free" data-name="Kimi K2.6" class="model-option px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                    <i class="fas fa-moon text-indigo-500"></i><span>Kimi K2.6 · Cepat & Umum</span>
-                </div>
-                <div data-model="openai/gpt-oss-20b:free" data-name="GPT-OSS 20B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                    <i class="fas fa-robot text-emerald-500"></i><span>GPT-OSS 20B · Open Source</span>
-                </div>
-                <div data-model="google/gemma-4-31b-it:free" data-name="Gemma 4 31B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                    <i class="fab fa-google text-blue-500"></i><span>Gemma 4 31B · Google</span>
-                </div>
-                <div data-model="qwen/qwen3-next-80b-a3b-instruct:free" data-name="Qwen 3 Next 80B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                    <i class="fas fa-dragon text-purple-500"></i><span>Qwen 3 Next 80B · Kuat</span>
-                </div>
-                <div data-model="meta-llama/llama-3.3-70b-instruct:free" data-name="Llama 3.3 70B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                    <i class="fas fa-llama text-orange-500"></i><span>Llama 3.3 70B · Meta</span>
-                </div>
-            </div>
+            <p class="text-xs text-gray-400 mt-2 text-center">
+                <i class="fas fa-keyboard"></i> Enter kirim · <i class="fas fa-image ml-2"></i> Upload gambar/dokumen
+            </p>
         </div>
     </div>
 
     <script>
-        // Add all the JavaScript functions from the previous version
-        // Including: sendMessage, handleFiles, formatMarkdown, etc.
-        // Make sure to include proper error handling for 429 responses
+        // Configuration
+        const OPENROUTER_API_KEY = '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';
         
         let isProcessing = false;
-        let selectedModel = 'moonshotai/kimi-k2.6:free';
-        let currentModelName = 'Kimi K2.6';
         let attachedFiles = [];
-        
-        // [Include all the previous JavaScript functions here with improved error handling]
-        // For brevity, I'm showing the key error handling part:
-        
-        async function sendMessage() {
-            if(isProcessing) return;
-            const rawMessage = textarea.value.trim();
-            if(!rawMessage && attachedFiles.length === 0) return;
-            
-            isProcessing = true;
-            addUserMessage(rawMessage || "Mengirim file...");
-            createTempBotMessage();
-            
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        message: rawMessage,
-                        model: selectedModel,
-                        attachments: attachedFiles
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if(response.status === 429) {
-                    replaceTempWithError("⚠️ Rate limit tercapai. Sistem akan mencoba model alternatif atau silakan tunggu beberapa saat.", data.error);
-                } else if(data.success) {
-                    replaceTempWithFinalResponse(data.response);
-                    clearAllAttachments();
-                } else {
-                    replaceTempWithError(data.error || "Terjadi kesalahan", data.error_details);
-                }
-            } catch(err) {
-                replaceTempWithError("Koneksi error. Periksa koneksi internet Anda.", err.message);
-            } finally {
-                isProcessing = false;
-                textarea.value = '';
-                textarea.focus();
-            }
-        }
-        
-        // [Rest of the functions remain the same]
+        let currentAssistantMessage = null;
+
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
-            toast.className = `toast-notification ${isError ? 'bg-red-600' : 'bg-gray-800'}`;
+            toast.className = `toast ${isError ? 'bg-red-600' : 'bg-gray-800'}`;
             toast.innerHTML = message;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
-        
-        // Make sure to define all helper functions
-        function toggleModelPanel() { document.getElementById('modelPanel').classList.toggle('hidden'); }
-        function clearChat() { /* implementation */ }
-        function handleKeyDown(e) { if(e.key === 'Enter' && !e.shiftKey && !isProcessing) sendMessage(); }
-        
-        // Initialize
-        document.querySelectorAll('.model-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                selectedModel = opt.dataset.model;
-                currentModelName = opt.dataset.name;
-                document.getElementById('currentModelLabel').innerText = currentModelName;
-                toggleModelPanel();
-                showToast(`Model berubah ke ${currentModelName}`);
-            });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatMarkdown(text) {
+            try {
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (lang && hljs.getLanguage(lang)) {
+                            return hljs.highlight(code, { language: lang }).value;
+                        }
+                        return hljs.highlightAuto(code).value;
+                    }
+                });
+                return DOMPurify.sanitize(marked.parse(text));
+            } catch(e) {
+                return escapeHtml(text);
+            }
+        }
+
+        function addUserMessage(text, hasFiles = false) {
+            const chatArea = document.getElementById('chatArea');
+            const welcomeDiv = chatArea.querySelector('#welcomeMessage');
+            if (welcomeDiv) welcomeDiv.remove();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3 justify-end';
+            let filesHtml = '';
+            if (hasFiles && attachedFiles.length) {
+                filesHtml = `<div class="text-xs text-gray-500 mt-1">📎 ${attachedFiles.length} file terlampir</div>`;
+            }
+            messageDiv.innerHTML = `
+                <div class="flex-1 text-right max-w-[80%]">
+                    <div class="user-bubble inline-block px-4 py-2 text-left">
+                        <p class="text-sm">${escapeHtml(text || 'Mengirim file...')}</p>
+                        ${filesHtml}
+                    </div>
+                </div>
+                <div class="w-8 h-8 bg-gray-200 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-user text-gray-600 text-xs"></i>
+                </div>
+            `;
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return messageDiv;
+        }
+
+        function showTypingIndicator() {
+            const chatArea = document.getElementById('chatArea');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'flex gap-3';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-feather-alt text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="bot-bubble px-4 py-3">
+                        <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                            <span class="text-xs text-gray-500 ml-2">Myrielle sedang mengetik...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return typingDiv;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        function addBotMessage(content) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3';
+            const formattedContent = formatMarkdown(content);
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-feather-alt text-white text-xs"></i>
+                </div>
+                <div class="flex-1 max-w-[80%]">
+                    <div class="bot-bubble px-4 py-3">
+                        <div class="markdown-content text-sm">${formattedContent}</div>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(messageDiv);
+            messageDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return messageDiv;
+        }
+
+        async function handleFiles(files) {
+            for (let file of files) {
+                const isImage = file.type.startsWith('image/');
+                const isText = file.type === 'text/plain' || /\.(txt|md|py|js|html|css|json)$/i.test(file.name);
+                
+                let content = null;
+                if (isImage) {
+                    const reader = new FileReader();
+                    content = await new Promise((resolve) => {
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    attachedFiles.push({ name: file.name, type: 'image', content: content });
+                } else if (isText) {
+                    const text = await file.text();
+                    attachedFiles.push({ name: file.name, type: 'text', content: text });
+                } else {
+                    attachedFiles.push({ name: file.name, type: 'other', content: file.name });
+                }
+                
+                // Show preview
+                const preview = document.getElementById('filePreview');
+                const chip = document.createElement('div');
+                chip.className = 'file-preview';
+                chip.innerHTML = `<i class="fas ${isImage ? 'fa-image' : 'fa-file'} text-gray-500"></i> ${file.name} <i class="fas fa-times-circle text-gray-400 cursor-pointer" onclick="this.parentElement.remove(); removeFile('${file.name}')"></i>`;
+                preview.appendChild(chip);
+            }
+            showToast(`${files.length} file siap dikirim`);
+        }
+
+        function removeFile(filename) {
+            attachedFiles = attachedFiles.filter(f => f.name !== filename);
+        }
+
+        function clearAllFiles() {
+            attachedFiles = [];
+            document.getElementById('filePreview').innerHTML = '';
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message && attachedFiles.length === 0) return;
+            
+            isProcessing = true;
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            addUserMessage(message || '📎 Mengirim file', attachedFiles.length > 0);
+            const typingIndicator = showTypingIndicator();
+            
+            // Build context with files
+            let finalMessage = message;
+            if (attachedFiles.length > 0) {
+                let fileContext = '\n\n--- File yang diupload ---\n';
+                for (let file of attachedFiles) {
+                    if (file.type === 'text') {
+                        fileContext += `File ${file.name}:\n${file.content.substring(0, 3000)}\n\n`;
+                    } else if (file.type === 'image') {
+                        fileContext += `[Gambar: ${file.name}] - Analisis berdasarkan nama file dan konteks\n`;
+                    } else {
+                        fileContext += `[File: ${file.name}] - Tipe: ${file.type}\n`;
+                    }
+                }
+                finalMessage = message ? message + fileContext : `Analisis file berikut:\n${fileContext}`;
+            }
+            
+            const selectedModel = document.getElementById('modelSelect').value;
+            const modelName = document.getElementById('modelSelect').options[document.getElementById('modelSelect').selectedIndex].text;
+            
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://myrielle.local',
+                        'X-Title': 'Myrielle Assistant'
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'Anda adalah Myrielle, asisten AI yang membantu, ramah, dan profesional. Berikan respons yang jelas, akurat, dan membantu. Untuk kode program, gunakan format markdown dengan sintaks highlighting.'
+                            },
+                            {
+                                role: 'user',
+                                content: finalMessage
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 2000
+                    })
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = `HTTP ${response.status}`;
+                    if (response.status === 429) {
+                        errorMsg = 'Rate limit tercapai. Tunggu beberapa saat atau ganti model.';
+                    } else if (response.status === 401) {
+                        errorMsg = 'API Key tidak valid. Periksa konfigurasi.';
+                    }
+                    throw new Error(errorMsg);
+                }
+                
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                
+                removeTypingIndicator();
+                addBotMessage(aiResponse);
+                clearAllFiles();
+                
+            } catch (error) {
+                removeTypingIndicator();
+                addBotMessage(`❌ **Error:** ${error.message}\n\nCoba ganti model atau tunggu beberapa saat.`);
+                showToast(error.message, true);
+            } finally {
+                isProcessing = false;
+                sendBtn.disabled = false;
+                document.getElementById('messageInput').value = '';
+                document.getElementById('messageInput').style.height = 'auto';
+                document.getElementById('messageInput').focus();
+            }
+        }
+
+        function sendQuick(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        function clearChat() {
+            const chatArea = document.getElementById('chatArea');
+            chatArea.innerHTML = `
+                <div class="flex gap-3" id="welcomeMessage">
+                    <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-sparkles text-white text-xs"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bot-bubble px-4 py-3">
+                            <p class="font-bold">Chat baru dimulai! ✨</p>
+                            <p class="text-sm text-gray-600 mt-1">Pilih model AI dan mulai bertanya. Upload file untuk analisis!</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            clearAllFiles();
+        }
+
+        // Auto-resize textarea
+        const textarea = document.getElementById('messageInput');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
         });
+        
+        textarea.focus();
     </script>
 </body>
 </html>

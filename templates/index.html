@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Myrielle — AI Assistant · Code Highlight Support</title>
+    <title>Myrielle — AI Multi-Model · File Upload & Code Highlight</title>
     
     <!-- Tailwind + Fonts + Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -121,7 +121,6 @@
             border-color: #cbd5e1;
         }
         
-        /* MARKDOWN + CODE BLOCK STYLING DENGAN HIGHLIGHT.JS */
         .markdown-content {
             line-height: 1.6;
         }
@@ -161,7 +160,6 @@
             font-family: 'JetBrains Mono', 'Courier New', monospace;
             color: #e6edf3;
         }
-        /* Highlight.js custom styling lebih rapi */
         .hljs {
             background: #0d1117 !important;
             border-radius: 16px !important;
@@ -188,10 +186,6 @@
             overflow: hidden;
         }
         
-        .temp-message {
-            opacity: 0.92;
-        }
-        
         .time-stamp {
             font-size: 10px;
             color: #9ca3af;
@@ -199,36 +193,34 @@
             margin-left: 4px;
         }
         
-        /* Tombol copy untuk kode */
-        .code-header {
-            display: flex;
-            justify-content: flex-end;
-            padding: 8px 12px;
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
+        /* File preview chips */
+        .file-chip {
+            background: #f1f5f9;
+            border-radius: 40px;
+            padding: 5px 12px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .copy-btn {
-            background: #21262d;
-            border: none;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            color: #8b949e;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
+        .modal-backdrop {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
         }
-        .copy-btn:hover {
-            background: #30363d;
-            color: #c9d1d9;
+        
+        /* Model selector active */
+        .model-option-active {
+            background: #0f172a;
+            color: white;
         }
     </style>
 </head>
 <body class="antialiased">
 <div class="flex flex-col h-screen-fixed w-full">
     
+    <!-- Header with model selector & new chat -->
     <header class="glass-header flex-shrink-0 z-20">
-        <div class="max-w-3xl mx-auto px-5 py-3.5 flex items-center justify-between">
+        <div class="max-w-3xl mx-auto px-5 py-3 flex items-center justify-between gap-3 flex-wrap">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#0f172a] rounded-2xl flex items-center justify-center shadow-md">
                     <i class="fas fa-feather-alt text-white text-sm"></i>
@@ -237,17 +229,52 @@
                     <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Myrielle</h1>
                     <div class="flex items-center gap-1.5 mt-0">
                         <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <p class="text-[11px] font-medium text-gray-500">support code highlight · Python, JS, dll</p>
+                        <p class="text-[11px] font-medium text-gray-500">Multi-Model · Upload file & gambar</p>
                     </div>
                 </div>
             </div>
-            <button onclick="clearChat()" class="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/80 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm border border-gray-200/80">
-                <i class="far fa-message-slash text-sm"></i>
-                <span class="hidden sm:inline">Percakapan baru</span>
-                <span class="sm:hidden">Baru</span>
-            </button>
+            <div class="flex gap-2 items-center">
+                <!-- Model dropdown trigger -->
+                <button id="modelSelectBtn" class="flex items-center gap-2 text-sm font-medium bg-white/90 hover:bg-white rounded-full px-4 py-2 shadow-sm border border-gray-200 transition-all">
+                    <i class="fas fa-brain text-gray-600"></i>
+                    <span id="currentModelLabel" class="hidden sm:inline truncate max-w-[150px]">Kimi K2.6</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </button>
+                <button onclick="clearChat()" class="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 bg-white/80 hover:bg-white rounded-full px-4 py-2 transition-all shadow-sm border border-gray-200/80">
+                    <i class="far fa-message-slash text-sm"></i>
+                    <span class="hidden sm:inline">Baru</span>
+                </button>
+            </div>
         </div>
     </header>
+    
+    <!-- Model dropdown panel (hidden by default) -->
+    <div id="modelPanel" class="hidden fixed inset-0 z-30 flex items-start justify-center pt-20 px-4" style="background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);" onclick="if(event.target === this) toggleModelPanel()">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200" onclick="event.stopPropagation()">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800">Pilih Model AI</h3>
+                <button onclick="toggleModelPanel()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-2 space-y-1 max-h-80 overflow-y-auto">
+                <div data-model="moonshotai/kimi-k2.6:free" data-name="Kimi K2.6" class="model-option px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-gray-50 flex items-center gap-3">
+                    <i class="fas fa-moon text-indigo-500 w-5"></i><span class="font-medium">Kimi K2.6 · Cepat & Umum</span>
+                </div>
+                <div data-model="openai/gpt-oss-20b:free" data-name="GPT-OSS 20B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-gray-50 flex items-center gap-3">
+                    <i class="fas fa-robot text-emerald-500 w-5"></i><span class="font-medium">GPT-OSS 20B · Open Source</span>
+                </div>
+                <div data-model="google/gemma-4-31b-it:free" data-name="Gemma 4 31B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-gray-50 flex items-center gap-3">
+                    <i class="fab fa-google text-blue-500 w-5"></i><span class="font-medium">Gemma 4 31B · Google</span>
+                </div>
+                <div data-model="qwen/qwen3-next-80b-a3b-instruct:free" data-name="Qwen 3 Next 80B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-gray-50 flex items-center gap-3">
+                    <i class="fas fa-dragon text-purple-500 w-5"></i><span class="font-medium">Qwen 3 Next 80B · Kuat</span>
+                </div>
+                <div data-model="meta-llama/llama-3.3-70b-instruct:free" data-name="Llama 3.3 70B" class="model-option px-3 py-2.5 rounded-xl cursor-pointer transition-all hover:bg-gray-50 flex items-center gap-3">
+                    <i class="fas fa-llama text-orange-500 w-5"></i><span class="font-medium">Llama 3.3 70B · Meta</span>
+                </div>
+            </div>
+            <div class="p-3 bg-gray-50 text-xs text-gray-500 text-center border-t">Gratis via OpenRouter</div>
+        </div>
+    </div>
     
     <div class="flex-1 relative min-h-0 overflow-hidden">
         <div id="chatScrollArea" class="chat-scroll-area h-full">
@@ -259,13 +286,13 @@
                     </div>
                     <div class="flex-1">
                         <div class="bot-bubble px-5 py-4">
-                            <p class="text-gray-800 font-bold text-xl leading-tight">Halo, <span class="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Myrielle</span> ✨</p>
-                            <p class="text-gray-600 mt-2 leading-relaxed text-[15px]">Asisten AI imajinatif yang siap membantu coding, menjelaskan konsep, atau membuat program. Coba minta saya untuk menulis kode Python!</p>
+                            <p class="text-gray-800 font-bold text-xl leading-tight">Myrielle <span class="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Multimodal</span> ✨</p>
+                            <p class="text-gray-600 mt-2 leading-relaxed text-[15px]">Upload foto, dokumen (PDF, TXT), atau file kode. Saya bisa membaca teks dari file dan menjawab pertanyaan. Ganti model AI sesuai kebutuhanmu!</p>
                         </div>
                         <div class="mt-3 flex gap-2 flex-wrap">
-                            <button onclick="sendQuickMessage('Buatkan program kalkulator sederhana dalam Python dengan fungsi tambah, kurang, kali, bagi')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-python text-blue-500"></i> Kalkulator Python</button>
-                            <button onclick="sendQuickMessage('Buatkan contoh fungsi sorting array dengan JavaScript')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-js text-yellow-500"></i> Sorting JS</button>
-                            <button onclick="sendQuickMessage('Buatkan HTML + CSS card sederhana yang responsif')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-html5 text-orange-500"></i> Card CSS</button>
+                            <button onclick="sendQuickMessage('Buatkan program kalkulator sederhana Python')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-python text-blue-500"></i> Kalkulator Py</button>
+                            <button onclick="sendQuickMessage('Jelaskan cara kerja sorting dengan ilustrasi')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fas fa-chart-line"></i> Sorting</button>
+                            <button onclick="sendQuickMessage('Buat CSS grid modern')" class="suggestion-chip text-xs text-gray-700 px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-css3-alt text-blue-600"></i> CSS Grid</button>
                         </div>
                     </div>
                 </div>
@@ -273,151 +300,202 @@
         </div>
     </div>
     
+    <!-- Input area with file attachment -->
     <div class="input-wrapper flex-shrink-0">
-        <div class="max-w-3xl mx-auto px-5 py-4 pb-6">
+        <div class="max-w-3xl mx-auto px-5 py-3 pb-5">
+            <!-- Attachment preview area -->
+            <div id="attachmentPreview" class="flex flex-wrap gap-2 mb-2 min-h-[40px]"></div>
+            
             <div class="relative input-glass rounded-2xl shadow-sm">
                 <textarea id="userInput" rows="1" 
-                    placeholder="Message..."
-                    class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-14 text-gray-800 placeholder:text-gray-400 text-[15px] leading-relaxed"
-                    style="min-height: 54px; max-height: 140px;"
+                    placeholder="Kirim pesan... atau upload file (gambar, PDF, txt, kode)"
+                    class="w-full resize-none rounded-2xl bg-transparent border-none focus:ring-0 outline-none py-3.5 pl-5 pr-28 text-gray-800 placeholder:text-gray-400 text-[15px] leading-relaxed"
+                    style="min-height: 54px; max-height: 120px;"
                     onkeydown="handleKeyDown(event)"
                 ></textarea>
-                <button onclick="sendMessage()" id="sendBtn"
-                    class="absolute right-2.5 bottom-2.5 text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100">
-                    <i class="fas fa-paper-plane text-lg"></i>
-                </button>
+                <div class="absolute right-2 bottom-2 flex gap-1 items-center">
+                    <label for="fileInput" class="cursor-pointer p-2.5 rounded-xl hover:bg-gray-100 transition text-gray-500">
+                        <i class="fas fa-paperclip text-lg"></i>
+                    </label>
+                    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.md,.py,.js,.html,.css,.json" multiple style="display: none;" onchange="handleFiles(this.files)">
+                    <button onclick="sendMessage()" id="sendBtn" class="text-gray-400 hover:text-gray-800 transition-all p-2.5 rounded-xl hover:bg-gray-100">
+                        <i class="fas fa-paper-plane text-lg"></i>
+                    </button>
+                </div>
             </div>
-            <div class="flex justify-center gap-4 mt-3 text-[10px] text-gray-400 font-medium">
-                <span><i class="far fa-keyboard mr-1"></i> Enter · kirim</span>
-                <span class="text-gray-300">•</span>
-                <span><i class="fas fa-code"></i> Syntax highlighting aktif</span>
+            <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium px-1">
+                <span><i class="far fa-keyboard mr-1"></i> Enter kirim · Upload gambar/docs</span>
+                <span><i class="fas fa-microchip"></i> Multi-model support</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // ---------- Global State ----------
     let isProcessing = false;
     let abortController = null;
     let currentTempMessageDiv = null;
+    let selectedModel = 'moonshotai/kimi-k2.6:free';
+    let currentModelName = 'Kimi K2.6';
+    let attachedFiles = []; // Store { name, type, content (base64 or text), isImage, rawData }
     
     const chatScrollArea = document.getElementById('chatScrollArea');
     const messagesContainer = document.getElementById('messagesContainer');
     const textarea = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
+    const attachmentPreviewDiv = document.getElementById('attachmentPreview');
     
-    // Konfigurasi marked dengan highlight.js
+    // marked config highlight
     marked.setOptions({
         highlight: function(code, lang) {
             if (lang && hljs.getLanguage(lang)) {
-                try {
-                    return hljs.highlight(code, { language: lang }).value;
-                } catch (err) {
-                    console.error('Highlight error:', err);
-                }
+                try { return hljs.highlight(code, { language: lang }).value; } catch(e) {}
             }
             return hljs.highlightAuto(code).value;
         },
-        breaks: true,
-        gfm: true
+        breaks: true, gfm: true
     });
     
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 140) + 'px';
-    });
-    
-    function handleKeyDown(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            if (!isProcessing) sendMessage();
-        }
+    // ---------- Model selector UI ----------
+    function toggleModelPanel() {
+        const panel = document.getElementById('modelPanel');
+        panel.classList.toggle('hidden');
     }
-    
-    function scrollToBottomSmooth() {
-        setTimeout(() => {
-            if (chatScrollArea) {
-                chatScrollArea.scrollTo({
-                    top: chatScrollArea.scrollHeight,
-                    behavior: 'smooth'
-                });
+    document.querySelectorAll('.model-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const modelId = opt.getAttribute('data-model');
+            const name = opt.getAttribute('data-name');
+            if(modelId) {
+                selectedModel = modelId;
+                currentModelName = name;
+                document.getElementById('currentModelLabel').innerText = name;
+                toggleModelPanel();
+                // add system info message optional: 
+                addSystemMessageNote(`Model diubah ke ${currentModelName}`);
             }
-        }, 70);
+        });
+    });
+    
+    function addSystemMessageNote(text) {
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'flex justify-center my-2 text-xs text-gray-400';
+        noteDiv.innerHTML = `<i class="fas fa-info-circle mr-1"></i> ${escapeHtml(text)}`;
+        messagesContainer.appendChild(noteDiv);
+        scrollToBottomSmooth();
+        setTimeout(() => noteDiv.remove(), 3000);
     }
     
-    function getTimeString() {
-        return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    // ---------- File Handling (multi type) ----------
+    async function handleFiles(files) {
+        if(!files.length) return;
+        for(let file of files) {
+            const fileType = file.type;
+            const isImage = fileType.startsWith('image/');
+            const isTextLike = fileType === 'text/plain' || file.name.endsWith('.md') || file.name.endsWith('.py') || file.name.endsWith('.js') || file.name.endsWith('.html') || file.name.endsWith('.css') || file.name.endsWith('.json');
+            const isPDF = fileType === 'application/pdf';
+            
+            let content = null;
+            let extractedText = null;
+            
+            try {
+                if(isImage) {
+                    const b64 = await readFileAsBase64(file);
+                    content = b64;
+                    extractedText = `[Gambar: ${file.name}] (deskripsi visual tidak diproses mandiri, tapi dapat dijelaskan oleh AI berdasarkan metadata)`;
+                    attachedFiles.push({ name: file.name, type: 'image', content: b64, isImage: true, rawFile: file });
+                    addPreviewChip(file.name, 'image');
+                } 
+                else if(isTextLike) {
+                    const textContent = await file.text();
+                    extractedText = `=== ISI FILE: ${file.name} ===\n${textContent}\n=== AKHIR FILE ===`;
+                    attachedFiles.push({ name: file.name, type: 'text', content: textContent, extractedText });
+                    addPreviewChip(file.name, 'text');
+                }
+                else if(isPDF) {
+                    extractedText = `[PDF: ${file.name}] Ekstraksi otomatis tidak tersedia langsung, tapi Anda bisa copy teks dari PDF lalu beri pertanyaan. Nama file: ${file.name}`;
+                    attachedFiles.push({ name: file.name, type: 'pdf', content: file.name, extractedText });
+                    addPreviewChip(file.name, 'pdf');
+                }
+                else {
+                    // fallback: coba baca sebagai text
+                    try {
+                        const fallbackText = await file.text();
+                        extractedText = `=== File: ${file.name} (as text) ===\n${fallbackText.substring(0, 4000)}\n=== `;
+                        attachedFiles.push({ name: file.name, type: 'unknown', content: fallbackText, extractedText });
+                        addPreviewChip(file.name, 'doc');
+                    } catch(e) { addPreviewChip(file.name, 'file', true); }
+                }
+            } catch(err) { console.warn(err); addPreviewChip(file.name, 'error', true); }
+        }
+        textarea.focus();
     }
     
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
+    function readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
     }
     
-    // Format markdown dengan syntax highlighting
-    function formatMarkdown(text) {
-        try {
-            let rawHtml = marked.parse(text);
-            let sanitized = DOMPurify.sanitize(rawHtml, {
-                ALLOWED_TAGS: ['p','br','strong','em','ul','ol','li','code','pre','h1','h2','h3','blockquote','a','span','div','i','b','table','thead','tbody','tr','th','td'],
-                ALLOWED_ATTR: ['href','target','class','id']
-            });
-            return sanitized;
-        } catch(e) {
-            return escapeHtml(text).replace(/\n/g, '<br>');
-        }
+    function addPreviewChip(filename, type, isError=false) {
+        const chip = document.createElement('div');
+        chip.className = 'file-chip bg-gray-100 text-gray-700';
+        let icon = '<i class="fas fa-file-alt"></i>';
+        if(type === 'image') icon = '<i class="fas fa-image text-blue-500"></i>';
+        if(type === 'pdf') icon = '<i class="fas fa-file-pdf text-red-500"></i>';
+        if(type === 'text') icon = '<i class="fas fa-code text-green-600"></i>';
+        chip.innerHTML = `${icon} <span class="truncate max-w-[150px]">${escapeHtml(filename)}</span> <i class="fas fa-times-circle text-gray-400 hover:text-red-500 cursor-pointer ml-1" onclick="this.parentElement.remove(); removeFileByName('${escapeHtml(filename)}')"></i>`;
+        attachmentPreviewDiv.appendChild(chip);
     }
     
-    function addUserMessage(message) {
+    function removeFileByName(name) {
+        attachedFiles = attachedFiles.filter(f => f.name !== name);
+        refreshPreviewChips();
+    }
+    function refreshPreviewChips() {
+        attachmentPreviewDiv.innerHTML = '';
+        attachedFiles.forEach(f => addPreviewChip(f.name, f.type));
+    }
+    function clearAllAttachments() {
+        attachedFiles = [];
+        attachmentPreviewDiv.innerHTML = '';
+    }
+    
+    // UI helpers
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    function getTimeString() { return new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' }); }
+    function scrollToBottomSmooth() { setTimeout(() => { if(chatScrollArea) chatScrollArea.scrollTo({ top: chatScrollArea.scrollHeight, behavior: 'smooth' }); }, 70); }
+    
+    function addUserMessage(message, hasAttachments=false) {
         const welcomeDiv = document.getElementById('welcomeMessage');
-        if (welcomeDiv && messagesContainer.children.length === 1) {
-            welcomeDiv.remove();
+        if(welcomeDiv && messagesContainer.children.length === 1) welcomeDiv.remove();
+        let attachmentHtml = '';
+        if(attachedFiles.length > 0) {
+            attachmentHtml = `<div class="flex flex-wrap gap-1 mt-2"><span class="text-xs bg-gray-200/60 rounded-full px-2 py-0.5"><i class="fas fa-paperclip"></i> ${attachedFiles.length} file terlampr</span></div>`;
         }
         const msgDiv = document.createElement('div');
         msgDiv.className = 'flex gap-3 justify-end message-animate';
-        msgDiv.innerHTML = `
-            <div class="flex-1 text-right max-w-[84%]">
-                <div class="user-bubble inline-block px-5 py-3 text-left">
-                    <p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>
-                </div>
-                <div class="time-stamp text-right pr-1">${getTimeString()}</div>
-            </div>
-            <div class="w-8 h-8 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                <i class="fas fa-user-astronaut text-gray-600 text-xs"></i>
-            </div>
-        `;
+        msgDiv.innerHTML = `<div class="flex-1 text-right max-w-[84%]"><div class="user-bubble inline-block px-5 py-3 text-left"><p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>${attachmentHtml}</div><div class="time-stamp text-right pr-1">${getTimeString()}</div></div><div class="w-8 h-8 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0"><i class="fas fa-user-astronaut text-gray-600 text-xs"></i></div>`;
         messagesContainer.appendChild(msgDiv);
-        gsap.fromTo(msgDiv, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.25 });
         scrollToBottomSmooth();
-        return msgDiv;
     }
     
     function createTempBotMessage() {
-        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
-            currentTempMessageDiv.remove();
-        }
+        if(currentTempMessageDiv?.parentNode) currentTempMessageDiv.remove();
         const tempDiv = document.createElement('div');
         tempDiv.className = 'flex gap-3 message-animate temp-message';
-        tempDiv.setAttribute('data-temp-msg', 'true');
-        tempDiv.innerHTML = `
-            <div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
-                <i class="fas fa-feather-alt text-white text-xs"></i>
-            </div>
-            <div class="flex-1 max-w-[84%]">
-                <div class="bot-bubble px-5 py-3.5">
-                    <div class="custom-typing-dots">
-                        <span></span><span></span><span></span>
-                        <span class="text-xs text-gray-500 ml-2 font-medium">Myrielle sedang menulis kode...</span>
-                    </div>
-                </div>
-                <div class="time-stamp">${getTimeString()}</div>
-            </div>
-        `;
+        tempDiv.innerHTML = `<div class="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl flex items-center justify-center shadow-sm"><i class="fas fa-feather-alt text-white text-xs"></i></div><div class="flex-1 max-w-[84%]"><div class="bot-bubble px-5 py-3.5"><div class="custom-typing-dots"><span></span><span></span><span></span><span class="text-xs text-gray-500 ml-2 font-medium">Myrielle (${currentModelName}) menulis...</span></div></div><div class="time-stamp">${getTimeString()}</div></div>`;
         messagesContainer.appendChild(tempDiv);
         scrollToBottomSmooth();
         currentTempMessageDiv = tempDiv;
@@ -425,207 +503,112 @@
     }
     
     function replaceTempWithFinalResponse(finalText) {
-        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+        if(currentTempMessageDiv && currentTempMessageDiv.parentNode) {
             const finalContent = formatMarkdown(finalText);
             const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
-            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
-            if (bubbleDiv) {
+            if(bubbleDiv) {
                 bubbleDiv.innerHTML = `<div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${finalContent}</div>`;
-                // Trigger highlight untuk semua block code di dalam bubble
-                bubbleDiv.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
+                bubbleDiv.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
             }
-            if (timeSpan) {
-                timeSpan.innerHTML = getTimeString();
-            }
+            if(currentTempMessageDiv.querySelector('.time-stamp')) currentTempMessageDiv.querySelector('.time-stamp').innerHTML = getTimeString();
             currentTempMessageDiv.classList.remove('temp-message');
-            currentTempMessageDiv.removeAttribute('data-temp-msg');
-            gsap.fromTo(bubbleDiv, { opacity: 0.9, y: 2 }, { opacity: 1, y: 0, duration: 0.2 });
             currentTempMessageDiv = null;
             scrollToBottomSmooth();
-        } else {
-            addBotMessage(finalText);
-        }
+        } else addBotMessage(finalText);
     }
-    
-    function replaceTempWithError(errorMsg, details = null) {
-        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
+    function replaceTempWithError(errMsg, details) { /* similar, simpler */
+        if(currentTempMessageDiv) {
             const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
-            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
-            let detailHtml = '';
-            if (details) {
-                detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-xl">${escapeHtml(details)}</pre></details>`;
-            }
-            if (bubbleDiv) {
-                bubbleDiv.innerHTML = `
-                    <div class="flex items-start gap-2 text-rose-700">
-                        <i class="fas fa-circle-exclamation mt-0.5"></i>
-                        <div class="flex-1">
-                            <span class="font-medium">⚠️ ${escapeHtml(errorMsg)}</span>
-                            ${detailHtml}
-                            <div class="text-xs text-rose-500/80 mt-1.5">Coba lagi ya ✨</div>
-                        </div>
-                    </div>
-                `;
-                bubbleDiv.style.background = '#fff5f5';
-            }
-            if (timeSpan) timeSpan.innerHTML = getTimeString();
-            currentTempMessageDiv.classList.remove('temp-message');
+            bubbleDiv.innerHTML = `<div class="flex gap-2 text-rose-700"><i class="fas fa-circle-exclamation"></i>⚠️ ${escapeHtml(errMsg)}</div>`;
             currentTempMessageDiv = null;
-            scrollToBottomSmooth();
-        } else {
-            addSystemErrorMessage(errorMsg, details);
-        }
+        } else addSystemErrorMessage(errMsg, details);
+        scrollToBottomSmooth();
     }
-    
     function addBotMessage(content) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'flex gap-3 message-animate';
-        const formattedHtml = formatMarkdown(content);
-        msgDiv.innerHTML = `
-            <div class="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-0.5">
-                <i class="fas fa-feather-alt text-white text-xs"></i>
-            </div>
-            <div class="flex-1 max-w-[84%]">
-                <div class="bot-bubble px-5 py-3.5">
-                    <div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${formattedHtml}</div>
-                </div>
-                <div class="time-stamp">${getTimeString()}</div>
-            </div>
-        `;
-        messagesContainer.appendChild(msgDiv);
-        msgDiv.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-        gsap.fromTo(msgDiv, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3 });
+        const div = document.createElement('div');
+        div.className = 'flex gap-3 message-animate';
+        div.innerHTML = `<div class="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center"><i class="fas fa-feather-alt text-white text-xs"></i></div><div class="flex-1 max-w-[84%]"><div class="bot-bubble px-5 py-3.5"><div class="markdown-content text-gray-800">${formatMarkdown(content)}</div></div><div class="time-stamp">${getTimeString()}</div></div>`;
+        messagesContainer.appendChild(div);
+        div.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
         scrollToBottomSmooth();
     }
-    
-    function addSystemErrorMessage(errorMsg, detailRaw = null) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'flex gap-3 message-animate';
-        let detailHtml = '';
-        if (detailRaw) {
-            detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail teknis</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-xl">${escapeHtml(detailRaw)}</pre></details>`;
-        }
-        errDiv.innerHTML = `
-            <div class="w-8 h-8 bg-rose-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-circle-exclamation text-rose-500 text-sm"></i>
-            </div>
-            <div class="flex-1">
-                <div class="bg-rose-50 border-l-4 border-rose-400 rounded-2xl px-5 py-3">
-                    <div class="flex items-center gap-2 text-rose-700 text-sm font-medium"><i class="fas fa-bolt"></i> ${escapeHtml(errorMsg)}</div>
-                    ${detailHtml}
-                    <div class="text-xs text-rose-500/80 mt-1">Coba kirim ulang nanti ✨</div>
-                </div>
-                <div class="time-stamp">${getTimeString()}</div>
-            </div>
-        `;
-        messagesContainer.appendChild(errDiv);
-        scrollToBottomSmooth();
+    function addSystemErrorMessage(msg, detail){ /* minimal */
+        addBotMessage(`❌ ${msg} ${detail ? `\n\nDetail: ${detail}` : ''}`);
     }
+    function formatMarkdown(text){ return DOMPurify.sanitize(marked.parse(text)); }
     
+    // Core Send with multimodal context + model selection
     async function sendMessage() {
-        if (isProcessing) return;
-        const rawMessage = textarea.value.trim();
-        if (!rawMessage) return;
+        if(isProcessing) return;
+        let rawMessage = textarea.value.trim();
+        const hasFiles = attachedFiles.length > 0;
+        if(!rawMessage && !hasFiles) return;
+        
+        // build user context with file contents
+        let finalUserPrompt = rawMessage;
+        if(hasFiles) {
+            let fileContext = "\n\n--- File lampiran ---\n";
+            for(let f of attachedFiles) {
+                if(f.extractedText) fileContext += `${f.extractedText}\n\n`;
+                else if(f.type === 'image') fileContext += `[Gambar: ${f.name}] (kontribusi visual untuk analisis umum)\n`;
+                else fileContext += `[File: ${f.name}] tersedia.\n`;
+            }
+            finalUserPrompt = rawMessage ? rawMessage + fileContext : `Analisis file-file berikut:\n${fileContext}`;
+        }
         
         isProcessing = true;
-        const currentMsg = rawMessage;
-        textarea.value = '';
-        textarea.style.height = 'auto';
         sendBtn.disabled = true;
-        sendBtn.style.opacity = '0.5';
-        
-        const welcomeDiv = document.getElementById('welcomeMessage');
-        if (welcomeDiv && messagesContainer.children.length === 1) welcomeDiv.remove();
-        
-        addUserMessage(currentMsg);
+        const currentMsgText = rawMessage || "(mengirim file)";
+        addUserMessage(currentMsgText, hasFiles);
         createTempBotMessage();
         
-        if (abortController) abortController.abort();
+        if(abortController) abortController.abort();
         abortController = new AbortController();
-        const timeoutId = setTimeout(() => abortController.abort(), 60000);
+        const timeoutId = setTimeout(() => abortController.abort(), 90000);
         
         try {
             const response = await fetch('/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: currentMsg }),
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: finalUserPrompt, model: selectedModel, attachments: attachedFiles.map(f => ({ name: f.name, type: f.type, preview: f.type==='image' ? '[image-data]' : null })) }),
                 signal: abortController.signal
             });
             clearTimeout(timeoutId);
-            
-            let data;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                const rawText = await response.text();
-                throw new Error(`Server response invalid: ${rawText.substring(0, 100)}`);
-            }
-            
-            if (data && data.success === true && data.response) {
+            let data = await response.json();
+            if(data && data.success === true && data.response) {
                 replaceTempWithFinalResponse(data.response);
+                clearAllAttachments();
             } else {
-                let errText = data?.error || 'Response tidak dikenali';
-                let debugInfo = data?.error_details || (data?.api_response ? JSON.stringify(data.api_response) : null);
-                replaceTempWithError(`Gagal: ${errText}`, debugInfo);
+                let errorMsg = data?.error || 'Respons tidak valid';
+                replaceTempWithError(`Gagal: ${errorMsg}`, data?.error_details);
             }
-        } catch (err) {
+        } catch(err) {
             clearTimeout(timeoutId);
-            let userFriendly = 'Koneksi terganggu, cek jaringan.';
-            let debugRaw = err.message;
-            if (err.name === 'AbortError') userFriendly = 'Myrielle kehabisan waktu, coba kirim ulang.';
-            else if (err.message.includes('Failed to fetch')) userFriendly = 'Server tidak merespon. Pastikan backend berjalan.';
-            replaceTempWithError(userFriendly, debugRaw);
-            console.error('Chat error:', err);
+            let friendly = err.name === 'AbortError' ? 'Timeout, coba lagi' : 'Jaringan error';
+            replaceTempWithError(friendly, err.message);
         } finally {
             isProcessing = false;
             sendBtn.disabled = false;
-            sendBtn.style.opacity = '1';
-            abortController = null;
+            textarea.value = '';
+            textarea.style.height = 'auto';
             textarea.focus();
+            abortController = null;
         }
     }
     
-    function sendQuickMessage(msg) {
-        if (!isProcessing) {
-            textarea.value = msg;
-            sendMessage();
-        }
-    }
-    
+    function sendQuickMessage(msg) { if(!isProcessing){ textarea.value = msg; sendMessage(); } }
     function clearChat() {
-        if (isProcessing) return;
-        messagesContainer.innerHTML = `
-            <div class="flex gap-3 message-animate" id="welcomeMessage">
-                <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
-                    <i class="fas fa-sparkles text-white text-sm"></i>
-                </div>
-                <div class="flex-1">
-                    <div class="bot-bubble px-5 py-4">
-                        <p class="text-gray-800 font-bold text-xl leading-tight">Obrolan segar ✨</p>
-                        <p class="text-gray-600 mt-2 leading-relaxed text-[15px]">Myrielle siap membantu coding & diskusi kode.</p>
-                    </div>
-                    <div class="mt-3 flex gap-2 flex-wrap">
-                        <button onclick="sendQuickMessage('Buatkan program python kalkulator sederhana')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-python"></i> Kalkulator Python</button>
-                        <button onclick="sendQuickMessage('Buatkan fungsi JavaScript untuk palindrome')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-js"></i> Palindrome JS</button>
-                        <button onclick="sendQuickMessage('Buatkan HTML card dengan flexbox')" class="suggestion-chip text-xs px-3 py-2 rounded-full flex items-center gap-1.5"><i class="fab fa-css3-alt"></i> Flexbox Card</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        if (currentTempMessageDiv && currentTempMessageDiv.parentNode) currentTempMessageDiv.remove();
+        if(isProcessing) return;
+        messagesContainer.innerHTML = `<div class="flex gap-3 message-animate" id="welcomeMessage"><div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center"><i class="fas fa-sparkles text-white text-sm"></i></div><div class="flex-1"><div class="bot-bubble px-5 py-4"><p class="font-bold">✨ Chat baru · Myrielle siap membantu</p><p class="text-gray-600">Unggah file atau ganti model dari dropdown.</p></div></div></div>`;
+        clearAllAttachments();
+        if(currentTempMessageDiv) currentTempMessageDiv.remove();
         currentTempMessageDiv = null;
         scrollToBottomSmooth();
-        textarea.focus();
     }
-    
-    document.addEventListener('DOMContentLoaded', () => {
+    function handleKeyDown(e){ if(e.key === 'Enter' && !e.shiftKey && !isProcessing) { e.preventDefault(); sendMessage(); } }
+    document.addEventListener('DOMContentLoaded', ()=>{
         textarea.focus();
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
-        if (chatScrollArea) chatScrollArea.style.overflowY = 'auto';
+        document.getElementById('currentModelLabel').innerText = 'Kimi K2.6';
     });
 </script>
 </body>

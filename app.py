@@ -34,7 +34,7 @@ def chat():
         }
         
         payload = {
-            'model': 'openai/gpt-oss-120b:free',
+            'model': 'moonshotai/kimi-k2.6:free',
             'messages': [
                 {
                     'role': 'system',

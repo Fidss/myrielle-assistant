@@ -19,7 +19,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
         
-        /* LOCK BODY — fixed, no background scroll */
         html, body {
             margin: 0;
             padding: 0;
@@ -30,7 +29,6 @@
             background: radial-gradient(circle at 10% 30%, #f9fafc 0%, #edf2f7 100%);
         }
         
-        /* Hanya container chat yang scroll secara independen */
         .chat-scroll-area {
             height: 100%;
             overflow-y: auto;
@@ -38,7 +36,6 @@
             padding-bottom: 8px;
         }
         
-        /* custom scrollbar modern */
         .chat-scroll-area::-webkit-scrollbar {
             width: 5px;
         }
@@ -54,7 +51,6 @@
             background: #94a3b8;
         }
         
-        /* Glassmorphic header with depth */
         .glass-header {
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(24px);
@@ -62,7 +58,6 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
         
-        /* Bubble design refined */
         .user-bubble {
             background: #0f172a;
             color: white;
@@ -80,7 +75,6 @@
             transition: all 0.1s ease;
         }
         
-        /* animasi pesan masuk lebih halus */
         @keyframes slideFade {
             from { opacity: 0; transform: translateY(18px); }
             to { opacity: 1; transform: translateY(0); }
@@ -89,7 +83,6 @@
             animation: slideFade 0.32s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
         }
         
-        /* TYPING INDICATOR (lebih halus, tidak ikut scroll liar) */
         .custom-typing-dots {
             display: flex;
             align-items: center;
@@ -112,7 +105,6 @@
             30% { transform: translateY(-5px); opacity: 1; background-color: #475569; }
         }
         
-        /* Suggestion chips modern */
         .suggestion-chip {
             transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             background: rgba(255,255,255,0.85);
@@ -127,7 +119,6 @@
             box-shadow: 0 8px 18px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.02);
         }
         
-        /* Markdown styling clean */
         .markdown-content p { margin-bottom: 12px; line-height: 1.55; }
         .markdown-content ul, .markdown-content ol { margin: 8px 0; padding-left: 1.5rem; }
         .markdown-content li { margin: 4px 0; }
@@ -135,7 +126,6 @@
         .markdown-content pre { background: #0f172a; padding: 14px; border-radius: 20px; overflow-x: auto; color: #e2e8f0; margin: 12px 0; }
         .markdown-content a { color: #334155; text-decoration: underline; font-weight: 500; }
         
-        /* Input area lebih lega dari bawah, tidak mentok, ada jarak aman */
         .input-wrapper {
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
@@ -154,30 +144,33 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.03), 0 0 0 3px rgba(148,163,184,0.1);
         }
         
-        /* Fix untuk fixed body */
         .h-screen-fixed {
             height: 100vh;
             overflow: hidden;
         }
         
-        /* pesan sementara tidak mengganggu scrolling */
         .temp-message {
             opacity: 0.92;
         }
         
-        /* perbaikan posisi tombol kirim */
         .send-btn-custom {
             transition: all 0.15s;
         }
         .send-btn-custom:active {
             transform: scale(0.94);
         }
+        
+        .time-stamp {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 6px;
+            margin-left: 4px;
+        }
     </style>
 </head>
 <body class="antialiased">
 <div class="flex flex-col h-screen-fixed w-full">
     
-    <!-- Header elegan dengan efek kaca lebih halus -->
     <header class="glass-header flex-shrink-0 z-20">
         <div class="max-w-3xl mx-auto px-5 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -200,11 +193,9 @@
         </div>
     </header>
     
-    <!-- CHAT AREA (hanya ini scroll) -->
     <div class="flex-1 relative min-h-0 overflow-hidden">
         <div id="chatScrollArea" class="chat-scroll-area h-full">
             <div class="max-w-3xl mx-auto px-5 py-6 space-y-5 pb-4" id="messagesContainer">
-                <!-- Welcome Message (dengan desain chip lebih fresh) -->
                 <div class="flex gap-3 message-animate" id="welcomeMessage">
                     <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
                         <i class="fas fa-sparkles text-white text-sm"></i>
@@ -225,7 +216,6 @@
         </div>
     </div>
     
-    <!-- Input Area - dengan jarak bawah aman, tidak mentok -->
     <div class="input-wrapper flex-shrink-0">
         <div class="max-w-3xl mx-auto px-5 py-4 pb-6">
             <div class="relative input-glass rounded-2xl shadow-sm">
@@ -252,15 +242,13 @@
 <script>
     let isProcessing = false;
     let abortController = null;
-    let currentTempMessageDiv = null;   // referensi ke loading bubble (yang akan diganti)
+    let currentTempMessageDiv = null;
     
-    // DOM elements
     const chatScrollArea = document.getElementById('chatScrollArea');
     const messagesContainer = document.getElementById('messagesContainer');
     const textarea = document.getElementById('userInput');
     const sendBtn = document.getElementById('sendBtn');
     
-    // auto-resize textarea smooth
     textarea.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 140) + 'px';
@@ -310,7 +298,6 @@
         }
     }
     
-    // Menambah pesan user
     function addUserMessage(message) {
         const welcomeDiv = document.getElementById('welcomeMessage');
         if (welcomeDiv && messagesContainer.children.length === 1) {
@@ -323,7 +310,7 @@
                 <div class="user-bubble inline-block px-5 py-3 text-left">
                     <p class="text-white text-[15px] leading-relaxed">${escapeHtml(message)}</p>
                 </div>
-                <div class="text-[10px] text-gray-400 mt-1.5 pr-1.5">${getTimeString()}</div>
+                <div class="time-stamp text-right pr-1">${getTimeString()}</div>
             </div>
             <div class="w-8 h-8 bg-gray-200 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
                 <i class="fas fa-user-astronaut text-gray-600 text-xs"></i>
@@ -335,7 +322,6 @@
         return msgDiv;
     }
     
-    // Membuat temporary message (loading/typing) yang nanti akan di-replace dengan respons asli
     function createTempBotMessage() {
         if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
             currentTempMessageDiv.remove();
@@ -354,7 +340,7 @@
                         <span class="text-xs text-gray-500 ml-2 font-medium">Myrielle sedang menulis</span>
                     </div>
                 </div>
-                <div class="text-[10px] text-gray-400 mt-1.5 ml-1">${getTimeString()}</div>
+                <div class="time-stamp">${getTimeString()}</div>
             </div>
         `;
         messagesContainer.appendChild(tempDiv);
@@ -363,12 +349,11 @@
         return tempDiv;
     }
     
-    // Replace temporary message dengan respons final (tanpa mengganti DOM secara kasar)
     function replaceTempWithFinalResponse(finalText) {
         if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
             const finalContent = formatMarkdown(finalText);
             const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
-            const timeSpan = currentTempMessageDiv.querySelector('.text-gray-400.mt-1.5');
+            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
             if (bubbleDiv) {
                 bubbleDiv.innerHTML = `<div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${finalContent}</div>`;
             }
@@ -377,7 +362,6 @@
             }
             currentTempMessageDiv.classList.remove('temp-message');
             currentTempMessageDiv.removeAttribute('data-temp-msg');
-            // animasi subtle
             gsap.fromTo(bubbleDiv, { opacity: 0.9, y: 2 }, { opacity: 1, y: 0, duration: 0.2 });
             currentTempMessageDiv = null;
             scrollToBottomSmooth();
@@ -389,7 +373,7 @@
     function replaceTempWithError(errorMsg, details = null) {
         if (currentTempMessageDiv && currentTempMessageDiv.parentNode) {
             const bubbleDiv = currentTempMessageDiv.querySelector('.bot-bubble');
-            const timeSpan = currentTempMessageDiv.querySelector('.text-gray-400.mt-1.5');
+            const timeSpan = currentTempMessageDiv.querySelector('.time-stamp');
             let detailHtml = '';
             if (details) {
                 detailHtml = `<details class="mt-2 text-xs"><summary class="cursor-pointer text-gray-500 font-medium">🔍 detail teknis</summary><pre class="text-[10px] overflow-x-auto mt-2 p-2 bg-gray-900 text-gray-200 rounded-xl">${escapeHtml(details)}</pre></details>`;
@@ -407,7 +391,9 @@
                 `;
                 bubbleDiv.style.background = '#fff5f5';
             }
-            if (timeSpan) timeSpan.innerHTML = getTimeString();
+            if (timeSpan) {
+                timeSpan.innerHTML = getTimeString();
+            }
             currentTempMessageDiv.classList.remove('temp-message');
             currentTempMessageDiv = null;
             scrollToBottomSmooth();
@@ -428,7 +414,7 @@
                 <div class="bot-bubble px-5 py-3.5">
                     <div class="markdown-content text-gray-800 text-[15px] leading-relaxed">${formattedHtml}</div>
                 </div>
-                <div class="text-[10px] text-gray-400 mt-1.5 ml-1">${getTimeString()}</div>
+                <div class="time-stamp">${getTimeString()}</div>
             </div>
         `;
         messagesContainer.appendChild(msgDiv);
@@ -453,14 +439,13 @@
                     ${detailHtml}
                     <div class="text-xs text-rose-500/80 mt-1">Coba kirim ulang nanti ✨</div>
                 </div>
-                <div class="text-[10px] text-gray-400 mt-1 ml-1">${getTimeString()}</div>
+                <div class="time-stamp">${getTimeString()}</div>
             </div>
         `;
         messagesContainer.appendChild(errDiv);
         scrollToBottomSmooth();
     }
     
-    // inti pengiriman pesan — loading bubble diganti mulus
     async function sendMessage() {
         if (isProcessing) return;
         const rawMessage = textarea.value.trim();
@@ -476,9 +461,7 @@
         const welcomeDiv = document.getElementById('welcomeMessage');
         if (welcomeDiv && messagesContainer.children.length === 1) welcomeDiv.remove();
         
-        // 1. user message
         addUserMessage(currentMsg);
-        // 2. tampilkan temporary bubble (loading)
         createTempBotMessage();
         
         if (abortController) abortController.abort();
@@ -536,7 +519,6 @@
     
     function clearChat() {
         if (isProcessing) return;
-        // reset chat bersih tanpa loading tersisa
         messagesContainer.innerHTML = `
             <div class="flex gap-3 message-animate" id="welcomeMessage">
                 <div class="w-9 h-9 bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 mt-1">
@@ -561,7 +543,6 @@
         textarea.focus();
     }
     
-    // lock body scroll dan inisialisasi
     document.addEventListener('DOMContentLoaded', () => {
         textarea.focus();
         document.body.style.overflow = 'hidden';
